@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">MusicAppMVVMJetpack</string>
+    <string name="splash">Best Free Music Streaming Services\n The free version of Music works a bit differently \n from the other services</string>
+    <string name="default_web_client_id">11584143416-ibalnlggbpe9su1psf2phvjgmit4c4je.apps.googleusercontent.com</string>
+    <string name="facebook_app_id">1197047348476981</string>
+    <string name="fb_login_protocol_scheme">fb1197047348476981</string>
+
 </resources>

@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -44,6 +43,7 @@ import coil.compose.AsyncImage
 import com.example.musicappmvvmjetpack.Activities.theme.ColorButton
 import com.example.musicappmvvmjetpack.Model.Music
 import com.example.musicappmvvmjetpack.R
+import com.example.musicappmvvmjetpack.ViewModel.AuthViewModel
 import com.example.musicappmvvmjetpack.ViewModel.MusicViewModel
 import com.example.musicappmvvmjetpack.ViewModel.MusicViewModelFactory
 
@@ -52,15 +52,20 @@ enum class Screen(val route: String) {
     ALBUMSCREEN("album"),
     PLAYMUSICSCREEN("play music"),
     SEARCHSCREEN("search"),
-    FAVORITESCREEN("favorite")
+    FAVORITESCREEN("favorite"),
+    SPLSCREEN("splash"),
+    LOGIN("login"),
+    PROFILE("profile"),
+    SIGNUP("signup"),
 }
 @Composable
 fun ScreenNavigation(){
     val navController = rememberNavController()
     val musicViewModel: MusicViewModel = viewModel(factory = MusicViewModelFactory(LocalContext.current))
+    //val loginViewModel: LoginViewModel = viewModel()
+    val authViewModel: AuthViewModel = viewModel()
 
-
-    NavHost(navController = navController, startDestination = Screen.HOMESCREEN.route){
+    NavHost(navController = navController, startDestination = Screen.LOGIN.route){
         composable(Screen.HOMESCREEN.route){
             Scaffold(
                 bottomBar = {
@@ -97,6 +102,18 @@ fun ScreenNavigation(){
                 FavoriteScreen(navController, musicViewModel, Modifier.padding(innerPadding))
             }
         }
+        composable(Screen.PROFILE.route) {
+            Scaffold(
+                bottomBar = {
+                    Column {
+                        NowMusicBar(musicViewModel, navController)
+                        BottomBar(navController, Screen.PROFILE)
+                    }
+                }
+            ) {innerPadding ->
+                ProfileScreen(navController, Modifier.padding(innerPadding))
+            }
+        }
         composable(
             "${Screen.PLAYMUSICSCREEN.route}/{id}",
             arguments = listOf(navArgument("id") {type = NavType.StringType}),
@@ -106,6 +123,9 @@ fun ScreenNavigation(){
             }
         }
         composable(Screen.SEARCHSCREEN.route) { SearchScreen(musicList = Music.getMusic(), navController) }
+        composable(Screen.SPLSCREEN.route) { SplScreen(navController) }
+        composable(Screen.LOGIN.route) { LoginScreen( navController) }
+        composable(Screen.SIGNUP.route) { SignUpScreen(navController) }
     }
 }
 @Composable
@@ -127,7 +147,6 @@ fun BottomBar(navController: NavController, currentScreen: Screen){
             colors = CardDefaults.cardColors(
                 containerColor = Color.White
             ),
-            elevation = CardDefaults.cardElevation(4.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -153,17 +172,15 @@ fun BottomBar(navController: NavController, currentScreen: Screen){
             colors = CardDefaults.cardColors(
                 containerColor = Color.White
             ),
-            elevation = CardDefaults.cardElevation(4.dp)
         ) {
             Column(
                 modifier = Modifier.padding(5.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Icon(
-                    Icons.Filled.List,
-                    contentDescription = "Album",
-                    tint = if (currentScreen == Screen.ALBUMSCREEN) ColorButton else Color.Gray
-                )
+                Image(
+                    painterResource(id = R.drawable.ic_album),
+                    contentDescription = "",
+                    colorFilter = ColorFilter.tint(if (currentScreen == Screen.ALBUMSCREEN) ColorButton else Color.Gray))
                 Text("Album", color = if (currentScreen == Screen.ALBUMSCREEN) ColorButton else Color.Gray)
             }
         }
@@ -178,7 +195,6 @@ fun BottomBar(navController: NavController, currentScreen: Screen){
             colors = CardDefaults.cardColors(
                 containerColor = Color.White
             ),
-            elevation = CardDefaults.cardElevation(4.dp)
         ) {
             Column(
                 modifier = Modifier
@@ -196,24 +212,26 @@ fun BottomBar(navController: NavController, currentScreen: Screen){
 
         Card(
             modifier = Modifier
-                .clickable {},
+                .clickable {
+                    navController.navigate(Screen.PROFILE.route) {
+                        popUpTo(Screen.PROFILE.route) { inclusive = true }
+                    }
+                },
             colors = CardDefaults.cardColors(
                 containerColor = Color.White
             ),
-            elevation = CardDefaults.cardElevation(4.dp)
         ) {
             Column(
-                modifier = Modifier.padding(5.dp),
+                modifier = Modifier
+                    .padding(5.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Icon(
                     Icons.Filled.Person,
-                    contentDescription = "",
-                    //tint = if (currentScreen == Screen.ALBUMSCREEN) ColorButton else Color.Gray
+                    contentDescription = "Profile",
+                    tint = if (currentScreen == Screen.PROFILE) ColorButton else Color.Gray
                 )
-                Text("My Profile",
-                    //color = if (currentScreen == Screen.ALBUMSCREEN) ColorButton else Color.Gray
-                )
+                Text("Profile", color = if (currentScreen == Screen.PROFILE) ColorButton else Color.Gray)
             }
         }
     }

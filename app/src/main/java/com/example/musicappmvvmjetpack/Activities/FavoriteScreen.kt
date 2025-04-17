@@ -67,7 +67,7 @@ fun FavoriteList(musicViewModel: MusicViewModel, onMusicClick: (id: String) -> U
 fun ItemFavorite(music: Music, onMusicClick: (id: String) -> Unit){
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(6.dp),
+        elevation = CardDefaults.cardElevation(1.dp),
         modifier = Modifier
             .clickable {
                 onMusicClick(music.id.toString())
@@ -79,7 +79,7 @@ fun ItemFavorite(music: Music, onMusicClick: (id: String) -> Unit){
                 .padding(vertical = 15.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(20.dp))
             Column(
                 modifier = Modifier.weight(2f)
             ) {
@@ -88,7 +88,7 @@ fun ItemFavorite(music: Music, onMusicClick: (id: String) -> Unit){
             }
             Icon(imageVector = Icons.Outlined.KeyboardArrowRight, contentDescription = "",
                 modifier = Modifier.size(30.dp))
-            Spacer(modifier = Modifier.height(10.dp))
+            Spacer(modifier = Modifier.height(20.dp))
         }
     }
 }
@@ -103,7 +103,7 @@ fun TopFavBar(navController: NavController){
             modifier = Modifier.weight(1f)) {
             Icon(imageVector = Icons.Default.KeyboardArrowLeft, contentDescription = null)
         }
-        Text(text = "My Music",
+        Text(text = "My Favorite",
             textAlign = TextAlign.Center,
             fontWeight = FontWeight.SemiBold,
             fontSize = 20.sp,

@@ -1,6 +1,7 @@
 package com.example.musicappmvvmjetpack.Activities
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,36 +17,35 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
+import com.example.musicappmvvmjetpack.Activities.theme.ColorButton
 import com.example.musicappmvvmjetpack.Model.Music
 import com.example.musicappmvvmjetpack.R
+import com.example.musicappmvvmjetpack.ViewModel.AuthViewModel
 import com.example.musicappmvvmjetpack.ViewModel.MusicViewModel
 
 
@@ -59,7 +59,7 @@ fun HomeScreen(navController: NavController, musicViewModel: MusicViewModel, pad
             .padding(horizontal = 30.dp)
             .clip(RoundedCornerShape(16.dp))
     ) {
-        Spacer(modifier = Modifier.height(50.dp))
+        Spacer(modifier = Modifier.height(30.dp))
         TopHomeBar()
         Spacer(modifier = Modifier.height(30.dp))
         Image(
@@ -79,14 +79,14 @@ fun HomeScreen(navController: NavController, musicViewModel: MusicViewModel, pad
             Text(text = "Most Popular",
                 modifier = Modifier.weight(2f),
                 fontWeight = FontWeight.Bold,
-                fontSize = 15.sp)
+                fontSize = 25.sp)
             Button(onClick = {  },
                 colors = ButtonDefaults.buttonColors(
                     contentColor = Color.White,
-                    containerColor = Color.Red
+                    containerColor = ColorButton
                 ),
                 modifier = Modifier.weight(1f)) {
-                Text(text = "View All")
+                Text(text = "View All", fontSize = 15.sp)
             }
         }
         Spacer(modifier = Modifier.height(20.dp))
@@ -94,6 +94,7 @@ fun HomeScreen(navController: NavController, musicViewModel: MusicViewModel, pad
             navController.navigate("${Screen.PLAYMUSICSCREEN.route}/${it}")
         })
     }
+
 }
 @Composable
 fun LazyMusicGrid(musics: List<Music>,onMusicClick: (id: String) -> Unit){
@@ -117,7 +118,6 @@ fun ItemMusic(music: Music, onMusicClick: (id: String) -> Unit){
                 onMusicClick(music.id.toString())
             },
         colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(6.dp)
     ) {
         Column(modifier = Modifier) {
             AsyncImage(
@@ -127,7 +127,8 @@ fun ItemMusic(music: Music, onMusicClick: (id: String) -> Unit){
                 modifier = Modifier
                     .wrapContentHeight()
                     .fillMaxWidth()
-                    .weight(8f)
+                    .weight(7f)
+                    .clip(shape = RoundedCornerShape(10.dp))
             )
             Text(
                 text = music.title,
@@ -139,9 +140,10 @@ fun ItemMusic(music: Music, onMusicClick: (id: String) -> Unit){
             Row(
                 modifier = Modifier.weight(1f)
             ){
-                Icon(Icons.Filled.ShoppingCart, contentDescription = null)
+                Image(painterResource(id = R.drawable.ic_dowload), contentDescription = "",
+                    colorFilter = ColorFilter.tint(color = Color.Gray))
                 Spacer(modifier = Modifier.width(5.dp))
-                Text(text ="${music.download}M Dowload", color = Color.DarkGray)
+                Text(text ="${music.download}M Download", color = Color.DarkGray)
             }
 
         }
@@ -149,38 +151,32 @@ fun ItemMusic(music: Music, onMusicClick: (id: String) -> Unit){
 }
 @Composable
 fun TopHomeBar(){
+    val viewModel: AuthViewModel = viewModel()
+    val user by viewModel.currentUser.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.loadCurrentUser()
+    }
     Row(
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column(
-            modifier = Modifier.weight(2f)
-        ) {
-            Text(text = "Hello", fontSize = 15.sp)
-            Text(text = "Duc", fontSize = 30.sp, fontWeight = FontWeight.SemiBold)
+        user?.let {
+            Column(
+                modifier = Modifier.weight(2f)
+            ) {
+                Text(text = "Hello", fontSize = 15.sp)
+                Text(text = it.username ?: "User", fontSize = 30.sp, fontWeight = FontWeight.SemiBold)
+            }
+            //CircleAvatar()
+            Image(
+                painter = rememberAsyncImagePainter(user?.photoUrl ?: R.drawable.img_bachduong),
+                contentDescription = null,
+                modifier = Modifier
+                    .clip(CircleShape)
+                    .size(50.dp)
+                    .border(1.dp, ColorButton),
+                contentScale = ContentScale.Crop
+            )
         }
-        //CircleAvatar()
-        Image(
-            painterResource(id = R.drawable.img_bachduong),
-            contentDescription = null,
-            modifier = Modifier
-                .clip(shape = CircleShape)
-                .size(50.dp)
-                .clip(RoundedCornerShape(30.dp)),
-            contentScale = ContentScale.Fit)
     }
-}
-@Composable
-fun SearchField(modifier: Modifier){
-    var SearchText by remember {
-        mutableStateOf("")
-    }
-    OutlinedTextField(
-        value = SearchText,
-        onValueChange = {searchValue->
-            SearchText = searchValue },
-        shape = RoundedCornerShape(12.dp),
-        placeholder = { Text(text = "Search")},
-        leadingIcon = { Icon((Icons.Default.Search), contentDescription = "")},
-    )
-
 }

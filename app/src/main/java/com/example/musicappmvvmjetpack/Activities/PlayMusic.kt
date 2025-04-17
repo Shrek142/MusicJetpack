@@ -14,12 +14,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -67,50 +63,49 @@ fun PlayMusicForm(musicViewModel: MusicViewModel, navController: NavController){
     val currentTime by musicViewModel.currentTime.observeAsState(0L)
     val totalDuration by musicViewModel.totalDuration.observeAsState(0L)
 
-    music?.let {
+    music?.let {music ->
         Scaffold(
-            topBar = {TopPlayBar(navController, musicViewModel, it)}
+            topBar = {TopPlayBar(navController, musicViewModel, music)}
         ) {
-
-        }
-        Column(
-            modifier = Modifier.padding(horizontal = 60.dp).clip(RoundedCornerShape(16.dp)) // Bo tròn góc
-                .background(Color.White),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(70.dp))
-            AsyncImage(
-                model = it.posterUrl,
-                contentDescription = null,
-                contentScale = ContentScale.FillWidth,
-                modifier = Modifier
-                    .fillMaxWidth()
-                   // .size(300.dp, 400.dp)
-                    .clip(RoundedCornerShape(15.dp))
-            )
-            Spacer(modifier = Modifier.height(30.dp))
-            Text(
-                text = it.title,
-                textAlign = TextAlign.Center,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 20.sp)
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(text = it.singer, textAlign = TextAlign.Center, fontSize = 15.sp, color = Color.DarkGray)
-            Spacer(modifier = Modifier.height(35.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically
+            Column(
+                modifier = Modifier.padding(horizontal = 60.dp).clip(RoundedCornerShape(16.dp)) // Bo tròn góc
+                    .background(Color.White),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                LinearProgressIndicator(
-                    progress = if (totalDuration > 0) (currentTime.toFloat() / totalDuration) else 0f,
-                    modifier = Modifier.weight(3f),
-                    color = ColorButton
+                Spacer(modifier = Modifier.height(70.dp))
+                AsyncImage(
+                    model = music.posterUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.FillWidth,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(400.dp)
+                        .clip(RoundedCornerShape(15.dp))
                 )
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(text = formatTime(currentTime), color = Color.DarkGray)  //hiển thị thời gian đếm ngược
+                Spacer(modifier = Modifier.height(30.dp))
+                Text(
+                    text = music.title,
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 20.sp)
+                Spacer(modifier = Modifier.height(10.dp))
+                Text(text = music.singer, textAlign = TextAlign.Center, fontSize = 15.sp, color = Color.DarkGray)
+                Spacer(modifier = Modifier.height(35.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    LinearProgressIndicator(
+                        progress = if (totalDuration > 0) (currentTime.toFloat() / totalDuration) else 0f,
+                        modifier = Modifier.weight(3f),
+                        color = ColorButton
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(text = formatTime(currentTime), color = Color.DarkGray)  //hiển thị thời gian đếm ngược
+                }
+                Spacer(modifier = Modifier.height(30.dp))
+                PlayMusicControls( musicViewModel)
+                //BottomPlayBar()
             }
-            Spacer(modifier = Modifier.height(30.dp))
-            PlayMusicControls( musicViewModel)
-            //BottomPlayBar()
         }
     }
 }
@@ -128,16 +123,16 @@ fun PlayMusicControls(musicViewModel: MusicViewModel){
         IconButton(onClick = { musicViewModel.isRandom = !musicViewModel.isRandom}) {
             if (musicViewModel.isRandom){
                 Image(
-                painter = painterResource(id = R.drawable.ic_random),
+                painter = painterResource(id = R.drawable.ic_random_24),
                 contentDescription = "Random",
                     colorFilter = ColorFilter.tint(ColorButton),
                 //modifier = Modifier.size(50.dp)
             )
             }else{
                 Image(
-                    painter = painterResource(id = R.drawable.ic_random),
+                    painter = painterResource(id = R.drawable.ic_random_24),
                     contentDescription = "Random",
-                    colorFilter = ColorFilter.tint(Color.LightGray),
+                    colorFilter = ColorFilter.tint(Color.Gray),
                     //modifier = Modifier.size(50.dp)
             )
             }
@@ -145,7 +140,7 @@ fun PlayMusicControls(musicViewModel: MusicViewModel){
         Spacer(modifier = Modifier.width(10.dp))
         IconButton(onClick = { musicViewModel.previousMusic() }) {
             Image(painterResource(id = R.drawable.ic_previous), contentDescription = "",
-                modifier = Modifier.size(100.dp)
+                modifier = Modifier.size(100.dp),colorFilter = ColorFilter.tint(Color.Gray)
             )
         }
         Spacer(modifier = Modifier.width(5.dp))
@@ -170,7 +165,7 @@ fun PlayMusicControls(musicViewModel: MusicViewModel){
             else{musicViewModel.nextMusic()}
         }) {
             Image(painterResource(id = R.drawable.ic_next), contentDescription = "",
-                modifier = Modifier.size(100.dp)
+                modifier = Modifier.size(100.dp),colorFilter = ColorFilter.tint(Color.Gray)
             )
         }
         Spacer(modifier = Modifier.width(10.dp))
@@ -178,7 +173,7 @@ fun PlayMusicControls(musicViewModel: MusicViewModel){
             Image(
                 painter = painterResource(id = R.drawable.ic_renew),
                 contentDescription = "replay",
-                colorFilter = ColorFilter.tint(Color.LightGray),
+                colorFilter = ColorFilter.tint(Color.Gray),
                 //modifier = Modifier.size(50.dp)
             )
         }
@@ -227,25 +222,3 @@ private fun formatTime(millis: Long) : String{
     return String.format("%02d:%02d", minutes, seconds)
 }
 
-@Composable
-fun BottomPlayBar(){
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp)),
-        horizontalArrangement = Arrangement.SpaceAround,
-    ) {
-        IconButton(onClick = { /*TODO*/ }) {
-            Icon(imageVector = Icons.Default.Add, contentDescription = null)
-        }
-        IconButton(onClick = { /*TODO*/ }) {
-            Icon(imageVector = Icons.Default.Share, contentDescription = null)
-        }
-        IconButton(onClick = { /*TODO*/ }) {
-            Icon(imageVector = Icons.Default.Warning, contentDescription = "Music")
-        }
-        IconButton(onClick = { /*TODO*/ }) {
-            Icon(imageVector = Icons.Default.Create, contentDescription = "Sound")
-        }
-    }
-}
