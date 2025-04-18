@@ -43,7 +43,6 @@ import coil.compose.AsyncImage
 import com.example.musicappmvvmjetpack.Activities.theme.ColorButton
 import com.example.musicappmvvmjetpack.Model.Music
 import com.example.musicappmvvmjetpack.R
-import com.example.musicappmvvmjetpack.ViewModel.AuthViewModel
 import com.example.musicappmvvmjetpack.ViewModel.MusicViewModel
 import com.example.musicappmvvmjetpack.ViewModel.MusicViewModelFactory
 
@@ -60,12 +59,11 @@ enum class Screen(val route: String) {
 }
 @Composable
 fun ScreenNavigation(){
+
     val navController = rememberNavController()
     val musicViewModel: MusicViewModel = viewModel(factory = MusicViewModelFactory(LocalContext.current))
-    //val loginViewModel: LoginViewModel = viewModel()
-    val authViewModel: AuthViewModel = viewModel()
 
-    NavHost(navController = navController, startDestination = Screen.LOGIN.route){
+    NavHost(navController = navController, startDestination = Screen.SPLSCREEN.route){
         composable(Screen.HOMESCREEN.route){
             Scaffold(
                 bottomBar = {
@@ -240,11 +238,10 @@ fun BottomBar(navController: NavController, currentScreen: Screen){
 fun NowMusicBar(musicViewModel: MusicViewModel, navController: NavController){
     val currentMusic by musicViewModel.currentMusic.observeAsState()
     val icon = if (musicViewModel.isPlay) {
-        R.drawable.ic_pause // Nếu đang phát, hiển thị icon tạm dừng
+        R.drawable.ic_pause
     } else {
-        R.drawable.ic_play // Nếu không phát, hiển thị icon phát
+        R.drawable.ic_play
     }
-
 
     currentMusic?.let {
         Row(

@@ -1,6 +1,5 @@
 package com.example.musicappmvvmjetpack.Activities
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -54,14 +53,13 @@ fun SignUpScreen(
 ) {
     val viewModel: AuthViewModel = viewModel()
     val context = LocalContext.current
-    var isShowed1 by remember {
-        mutableStateOf(false)
-    }
-    var isShowed2 by remember {
-        mutableStateOf(false)
-    }
+
+    var isShowed1 by remember { mutableStateOf(false) }
+    var isShowed2 by remember { mutableStateOf(false) }
+
     val result by viewModel.authResult.collectAsState()
     val errorMessage by viewModel.errorMessage.collectAsState()
+
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirm by remember { mutableStateOf("") }
@@ -82,8 +80,6 @@ fun SignUpScreen(
             viewModel.resetAuthResult()
         }
     }
-
-
 
     Column(
         modifier = Modifier
@@ -154,7 +150,7 @@ fun SignUpScreen(
             visualTransformation = if (isShowed2) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password,
-                imeAction = ImeAction.Done
+                imeAction = ImeAction.Next
             )
         )
         Spacer(modifier = Modifier.height(15.dp))
@@ -176,7 +172,7 @@ fun SignUpScreen(
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Next
+                imeAction = ImeAction.Done
             )
         )
         Spacer(modifier = Modifier.height(10.dp))
@@ -203,7 +199,6 @@ fun SignUpScreen(
                 }else{
                     Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT).show()
                 }
-                Log.d("signup2", "${username}")
             },
             shape = RoundedCornerShape(8.dp),
             elevation = ButtonDefaults.buttonElevation(

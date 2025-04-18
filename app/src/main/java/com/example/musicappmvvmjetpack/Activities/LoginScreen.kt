@@ -89,7 +89,6 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
 
     val authResult by viewModel.authResult.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
     val callbackManager = remember { CallbackManager.Factory.create() }
 
     val context = LocalContext.current
@@ -159,7 +158,7 @@ fun LoginScreen(
             colorFilter = ColorFilter.tint(ColorButton),
             modifier = Modifier.size(100.dp)
         )
-        Spacer(modifier = Modifier.height(50.dp))
+        Spacer(modifier = Modifier.height(35.dp))
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
@@ -191,7 +190,7 @@ fun LoginScreen(
                 imeAction = ImeAction.Done
             )
         )
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(20.dp))
         Row {
             Text(text = "Don't have an account?", fontSize = 15.sp, color = Color.Gray)
             Spacer(modifier = Modifier.width(5.dp))

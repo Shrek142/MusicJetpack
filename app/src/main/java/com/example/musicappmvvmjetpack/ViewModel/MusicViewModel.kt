@@ -11,6 +11,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.musicappmvvmjetpack.Model.Music
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class MusicViewModel(private val context: Context) : ViewModel() {
 
@@ -43,6 +45,18 @@ class MusicViewModel(private val context: Context) : ViewModel() {
     init {
         _music.value = Music.getMusic()
     }
+
+    private val firestore = FirebaseFirestore.getInstance()
+    private val auth = FirebaseAuth.getInstance()
+
+    fun syncFavoritesToFirestore() {
+        val uid = auth.currentUser?.uid ?: return
+        val songIds = favoriteSongs.map { it.id.toString() }
+
+        firestore.collection("users").document(uid)
+            .update("favoriteSongIds", songIds)
+    }
+
 
     fun getMusicById(id: String): Music? {
         return _music.value?.find { it.id == id.toInt() }
@@ -143,12 +157,14 @@ class MusicViewModel(private val context: Context) : ViewModel() {
     fun addFavorite(song: Music) {
         if (!favoriteSongs.contains(song)) {
             favoriteSongs.add(song)
+            syncFavoritesToFirestore()
         }
     }
 
     // Hàm xóa bài hát khỏi danh sách yêu thích
     fun removeFavorite(song: Music) {
         favoriteSongs.remove(song)
+        syncFavoritesToFirestore()
     }
 
     override fun onCleared() {
@@ -156,4 +172,17 @@ class MusicViewModel(private val context: Context) : ViewModel() {
         mediaPlayer?.release()
         stopTimer()
     }
+    fun loadFavoritesFromFirestore() {
+        val uid = auth.currentUser?.uid ?: return
+
+        firestore.collection("users").document(uid)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val songIds = snapshot.get("favoriteSongIds") as? List<String> ?: emptyList()
+                val allSongs = _music.value ?: emptyList()
+                favoriteSongs.clear()
+                favoriteSongs.addAll(allSongs.filter { songIds.contains(it.id.toString()) })
+            }
+    }
+
 }

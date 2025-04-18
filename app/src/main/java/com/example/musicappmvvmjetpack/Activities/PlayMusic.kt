@@ -15,7 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -104,83 +104,84 @@ fun PlayMusicForm(musicViewModel: MusicViewModel, navController: NavController){
                 }
                 Spacer(modifier = Modifier.height(30.dp))
                 PlayMusicControls( musicViewModel)
-                //BottomPlayBar()
             }
         }
     }
 }
 @Composable
 fun PlayMusicControls(musicViewModel: MusicViewModel){
+    val currentMusic by musicViewModel.currentMusic.observeAsState()
     val icon = if (musicViewModel.isPlay) {
-        R.drawable.ic_pause // Nếu đang phát, hiển thị icon tạm dừng
+        R.drawable.ic_pause
     } else {
-        R.drawable.ic_play // Nếu không phát, hiển thị icon phát
+        R.drawable.ic_play
     }
 
-    Row(
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(onClick = { musicViewModel.isRandom = !musicViewModel.isRandom}) {
-            if (musicViewModel.isRandom){
-                Image(
-                painter = painterResource(id = R.drawable.ic_random_24),
-                contentDescription = "Random",
-                    colorFilter = ColorFilter.tint(ColorButton),
-                //modifier = Modifier.size(50.dp)
-            )
-            }else{
-                Image(
-                    painter = painterResource(id = R.drawable.ic_random_24),
-                    contentDescription = "Random",
-                    colorFilter = ColorFilter.tint(Color.Gray),
-                    //modifier = Modifier.size(50.dp)
-            )
+    currentMusic?.let{
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = { musicViewModel.isRandom = !musicViewModel.isRandom}) {
+                if (musicViewModel.isRandom){
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_random_24),
+                        contentDescription = "Random",
+                        colorFilter = ColorFilter.tint(ColorButton),
+                    )
+                }else{
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_random_24),
+                        contentDescription = "Random",
+                        colorFilter = ColorFilter.tint(Color.Gray),
+                    )
+                }
             }
-        }
-        Spacer(modifier = Modifier.width(10.dp))
-        IconButton(onClick = { musicViewModel.previousMusic() }) {
-            Image(painterResource(id = R.drawable.ic_previous), contentDescription = "",
-                modifier = Modifier.size(100.dp),colorFilter = ColorFilter.tint(Color.Gray)
-            )
-        }
-        Spacer(modifier = Modifier.width(5.dp))
-        IconButton(onClick = {
-            if (musicViewModel.isPlay){
-                musicViewModel.pauseMusic()
-            }else{
-                musicViewModel.resumeMusic()
+            Spacer(modifier = Modifier.width(10.dp))
+            IconButton(onClick = { musicViewModel.previousMusic() }) {
+                Image(
+                    painterResource(id = R.drawable.ic_previous), contentDescription = "",
+                    modifier = Modifier.size(100.dp),colorFilter = ColorFilter.tint(Color.Gray)
+                )
             }
+            Spacer(modifier = Modifier.width(5.dp))
+            IconButton(onClick = {
+                if (musicViewModel.isPlay){
+                    musicViewModel.pauseMusic()
+                }else{
+                    musicViewModel.resumeMusic()
+                }
 
-        }) {
-            Image(
-                painter = painterResource(id = icon),
-                contentDescription = "",
-                colorFilter = ColorFilter.tint(ColorButton),
-                modifier = Modifier.size(100.dp)
-            )
-        }
-        Spacer(modifier = Modifier.width(5.dp))
-        IconButton(onClick = {
-            if (musicViewModel.isRandom){musicViewModel.playNextRandom()}
-            else{musicViewModel.nextMusic()}
-        }) {
-            Image(painterResource(id = R.drawable.ic_next), contentDescription = "",
-                modifier = Modifier.size(100.dp),colorFilter = ColorFilter.tint(Color.Gray)
-            )
-        }
-        Spacer(modifier = Modifier.width(10.dp))
-        IconButton(onClick = {  }) {
-            Image(
-                painter = painterResource(id = R.drawable.ic_renew),
-                contentDescription = "replay",
-                colorFilter = ColorFilter.tint(Color.Gray),
-                //modifier = Modifier.size(50.dp)
-            )
+            }) {
+                Image(
+                    painter = painterResource(id = icon),
+                    contentDescription = "",
+                    colorFilter = ColorFilter.tint(ColorButton),
+                    modifier = Modifier.size(100.dp)
+                )
+            }
+            Spacer(modifier = Modifier.width(5.dp))
+            IconButton(onClick = {
+                if (musicViewModel.isRandom){musicViewModel.playNextRandom()}
+                else{musicViewModel.nextMusic()}
+            }) {
+                Image(
+                    painterResource(id = R.drawable.ic_next), contentDescription = "",
+                    modifier = Modifier.size(100.dp),colorFilter = ColorFilter.tint(Color.Gray)
+                )
+            }
+            Spacer(modifier = Modifier.width(10.dp))
+            IconButton(onClick = {  }) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_renew),
+                    contentDescription = "replay",
+                    colorFilter = ColorFilter.tint(Color.Gray),
+                )
+            }
         }
     }
 }
 @Composable
-fun TopPlayBar(navController: NavController, musicViewModel: MusicViewModel, music: Music){
+fun TopPlayBar(navController: NavController, musicViewModel: MusicViewModel, music: Music) {
     val isFavorite = musicViewModel.favoriteSongs.contains(music)
 
     Row(
@@ -189,16 +190,21 @@ fun TopPlayBar(navController: NavController, musicViewModel: MusicViewModel, mus
         horizontalArrangement = Arrangement.SpaceAround
     ) {
         IconButton(onClick = {
+            musicViewModel.currentMusicId = music.id
             navController.popBackStack()
-            musicViewModel.currentMusicId = music.id},
+        },
             modifier = Modifier.weight(1f)) {
-            Icon(imageVector = Icons.Default.KeyboardArrowLeft, contentDescription = null)
+            Icon(imageVector = Icons.Default.KeyboardArrowDown, contentDescription = null)
         }
-        Text(text = "Now Playing",
+
+        Text(
+            text = "Now Playing",
             textAlign = TextAlign.Center,
             fontWeight = FontWeight.SemiBold,
             fontSize = 20.sp,
-            modifier = Modifier.weight(3f))
+            modifier = Modifier.weight(3f)
+        )
+
         IconButton(onClick = {
             if (isFavorite) {
                 musicViewModel.removeFavorite(music)
@@ -207,15 +213,14 @@ fun TopPlayBar(navController: NavController, musicViewModel: MusicViewModel, mus
             }
         },
             modifier = Modifier.weight(1f)) {
-            if (isFavorite){
+            if (isFavorite) {
                 Icon(imageVector = Icons.Default.Favorite, contentDescription = null, tint = Color.Red)
-            }else{
+            } else {
                 Icon(imageVector = Icons.Outlined.FavoriteBorder, contentDescription = null)
             }
         }
     }
 }
-
 private fun formatTime(millis: Long) : String{
     val seconds = (millis /1000) % 60
     val minutes  = (millis/(1000*60)) %60

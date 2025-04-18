@@ -4,6 +4,7 @@ import com.example.musicappmvvmjetpack.Model.User
 import com.facebook.AccessToken
 import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -56,11 +57,51 @@ class AuthRepository {
         }
     }
 
-    fun loginWithGoogleCredential(idToken: String, onResult: (Boolean) -> Unit) {
+    fun updateUserEmail(newEmail: String, onResult: (Boolean) -> Unit) {
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user != null) {
+            user.updateEmail(newEmail)
+                .addOnCompleteListener { task ->
+                    onResult(task.isSuccessful)
+                }
+        } else {
+            onResult(false)
+        }
+    }
+
+
+    fun loginWithGoogleCredential(idToken: String, onResult: (FirebaseUser?, Boolean) -> Unit) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
         FirebaseAuth.getInstance().signInWithCredential(credential)
             .addOnCompleteListener { task ->
-                onResult(task.isSuccessful)
+                if (task.isSuccessful) {
+                    val user = FirebaseAuth.getInstance().currentUser
+                    if (user != null) {
+                        // Tạo đối tượng User
+                        val userData = User(
+                            uid = user.uid,
+                            username = user.displayName ?: "",
+                            email = user.email ?: "",
+                            phoneNumber = user.phoneNumber ?: "",
+                            photoUrl = user.photoUrl?.toString() ?: "",
+                            favoriteMusicId = emptyList()
+                        )
+
+                        // Lưu vào Firestore nếu chưa có
+                        val userDoc = FirebaseFirestore.getInstance().collection("users").document(user.uid)
+                        userDoc.get().addOnSuccessListener { snapshot ->
+                            if (!snapshot.exists()) {
+                                userDoc.set(userData)
+                            }
+                        }
+
+                        onResult(user, true)
+                    } else {
+                        onResult(null, false)
+                    }
+                } else {
+                    onResult(null, false)
+                }
             }
     }
 
@@ -70,6 +111,9 @@ class AuthRepository {
             .addOnCompleteListener { task ->
                 onResult(task.isSuccessful)
             }
+    }
+    fun logout() {
+        FirebaseAuth.getInstance().signOut()
     }
 
 }

@@ -59,8 +59,22 @@ class AuthViewModel : ViewModel() {
         _errorMessage.value = null
     }
     fun loginWithGoogle(idToken: String) {
-        repository.loginWithGoogleCredential(idToken) { success ->
-            _authResult.value = success
+        viewModelScope.launch {
+            repository.loginWithGoogleCredential(idToken) { firebaseUser, success ->
+                if (success && firebaseUser != null) {
+                    val user = User(
+                        uid = firebaseUser.uid,
+                        username = firebaseUser.displayName ?: "",
+                        email = firebaseUser.email ?: "",
+                        phoneNumber = firebaseUser.phoneNumber ?: "",
+                        photoUrl = firebaseUser.photoUrl?.toString() ?: "",
+                        favoriteMusicId = emptyList()
+                    )
+
+                    _currentUser.value = user
+                }
+                _authResult.value = success
+            }
         }
     }
 
@@ -69,4 +83,21 @@ class AuthViewModel : ViewModel() {
             _authResult.value = success
         }
     }
+    fun updateUserEmailAndFirestore(newEmail: String) {
+        val currentUser = _currentUser.value ?: return
+
+        repository.updateUserEmail(newEmail) { success ->
+            if (success) {
+                val updated = currentUser.copy(email = newEmail)
+                updateUser(updated)
+            } else {
+                _errorMessage.value = "Không thể cập nhật email đăng nhập"
+            }
+        }
+    }
+    fun logout() {
+        repository.logout()
+        _currentUser.value = null
+    }
+
 }

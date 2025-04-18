@@ -6,4 +6,5 @@ data class User(
     val username: String = "",
     val phoneNumber: String = "",
     val photoUrl: String = "",
+    val favoriteMusicId: List<String> = emptyList()
 )

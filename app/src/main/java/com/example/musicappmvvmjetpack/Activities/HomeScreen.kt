@@ -27,6 +27,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,6 +50,7 @@ import com.example.musicappmvvmjetpack.Model.Music
 import com.example.musicappmvvmjetpack.R
 import com.example.musicappmvvmjetpack.ViewModel.AuthViewModel
 import com.example.musicappmvvmjetpack.ViewModel.MusicViewModel
+import kotlinx.coroutines.delay
 
 
 @Composable
@@ -62,15 +66,7 @@ fun HomeScreen(navController: NavController, musicViewModel: MusicViewModel, pad
         Spacer(modifier = Modifier.height(30.dp))
         TopHomeBar()
         Spacer(modifier = Modifier.height(30.dp))
-        Image(
-            painterResource(id = R.drawable.img),
-            contentDescription = "",
-            alignment = Alignment.Center,
-            contentScale = ContentScale.FillWidth,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(12.dp))
-        )
+        AutoChangingBanner()
         Spacer(modifier = Modifier.height(25.dp))
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -86,7 +82,11 @@ fun HomeScreen(navController: NavController, musicViewModel: MusicViewModel, pad
                     containerColor = ColorButton
                 ),
                 modifier = Modifier.weight(1f)) {
-                Text(text = "View All", fontSize = 15.sp)
+                Text(text = "View All",
+                    fontSize = 15.sp,
+                    modifier = Modifier.clickable {
+                        navController.navigate(Screen.ALBUMSCREEN.route)
+                    })
             }
         }
         Spacer(modifier = Modifier.height(20.dp))
@@ -180,3 +180,31 @@ fun TopHomeBar(){
         }
     }
 }
+@Composable
+fun AutoChangingBanner() {
+    val images = listOf(
+        R.drawable.img,
+        R.drawable.banner2,
+        R.drawable.banner3
+    )
+
+    var currentIndex by remember { mutableStateOf(0) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(5000L)
+            currentIndex = (currentIndex + 1) % images.size
+        }
+    }
+
+    Image(
+        painter = painterResource(id = images[currentIndex]),
+        contentDescription = "Banner",
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp)
+            .clip(RoundedCornerShape(15.dp)),
+        contentScale = ContentScale.Crop
+    )
+}
+

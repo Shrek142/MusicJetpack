@@ -31,9 +31,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.musicappmvvmjetpack.Activities.theme.ColorButton
 import com.example.musicappmvvmjetpack.R
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun SplScreen(navController: NavController){
+    val isLoggedIn = FirebaseAuth.getInstance().currentUser != null
+
     Column(
         modifier = Modifier.padding(horizontal = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -54,7 +57,7 @@ fun SplScreen(navController: NavController){
         Text(text = stringResource(id = R.string.splash), color = Color.Gray, fontSize = 12.sp, textAlign = TextAlign.Center)
         Spacer(modifier = Modifier.height(200.dp))
         Button(
-            onClick = { navController.navigate(Screen.LOGIN.route) },
+            onClick = { navController.navigate(if (isLoggedIn) Screen.HOMESCREEN.route else Screen.LOGIN.route) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(55.dp),

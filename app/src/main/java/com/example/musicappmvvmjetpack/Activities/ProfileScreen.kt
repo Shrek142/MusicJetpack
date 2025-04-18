@@ -63,19 +63,38 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.musicappmvvmjetpack.Activities.theme.ColorButton
 import com.example.musicappmvvmjetpack.R
 import com.example.musicappmvvmjetpack.ViewModel.AuthViewModel
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 @Composable
 fun ProfileScreen(navController: NavHostController, padding: Modifier) {
+    val viewModel: AuthViewModel = viewModel()
+    val user by viewModel.currentUser.collectAsState()
+    var isRefreshing by remember { mutableStateOf(false) }
+
+    val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
+
     Scaffold(
-        topBar = {TopProBar(navController)}
-    ) {innerPadding ->
-        MainContent(innerPadding)
+        topBar = { TopProBar(navController) }
+    ) { innerPadding ->
+        SwipeRefresh(
+            state = swipeRefreshState,
+            onRefresh = {
+                isRefreshing = true
+                viewModel.loadCurrentUser()
+            },
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            LaunchedEffect(user) {
+                isRefreshing = false
+            }
+            MainContent(innerPadding, navController)
+        }
     }
-
 }
-@Composable
-fun MainContent(innerPadding: PaddingValues){
 
+@Composable
+fun MainContent(innerPadding: PaddingValues, navController: NavController) {
     val viewModel: AuthViewModel = viewModel()
     val user by viewModel.currentUser.collectAsState()
 
@@ -91,16 +110,15 @@ fun MainContent(innerPadding: PaddingValues){
     ) {
         user?.let {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Image(
-                    painter = rememberAsyncImagePainter(user?.photoUrl ?: R.drawable.img_bachduong),
+                    painter = rememberAsyncImagePainter(it.photoUrl.ifEmpty { R.drawable.img_bachduong }),
                     contentDescription = null,
                     modifier = Modifier
                         .clip(CircleShape)
-                        .size(150.dp)
+                        .size(130.dp)
                         .border(1.dp, ColorButton),
                     contentScale = ContentScale.Crop
                 )
@@ -135,28 +153,42 @@ fun MainContent(innerPadding: PaddingValues){
                         Text(text = "Followed Albums", fontSize = 15.sp, color = Color.Gray)
                     }
                 }
-                Spacer(modifier = Modifier.height(25.dp))
             }
         }
+        Spacer(modifier = Modifier.height(25.dp))
+        Button(
+            onClick = {
+                viewModel.logout()
+                navController.navigate(Screen.LOGIN.route) {
+                    popUpTo(Screen.HOMESCREEN.route) { inclusive = true }
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = ColorButton,
+                contentColor = Color.White
+            )
+        ) {
+            Text("Đăng xuất")
+        }
+        Spacer(modifier = Modifier.height(10.dp))
         Text(text = "Followed Artists", fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
         Spacer(modifier = Modifier.height(10.dp))
         LazyColumnSinger()
     }
 }
+
 @Composable
-fun LazyColumnSinger(){
-    LazyColumn(modifier = Modifier.fillMaxWidth()){
-        item { ItemSinger(singer = "aa", song = "ssss") }
-        item { ItemSinger(singer = "aa", song = "ssss") }
-        item { ItemSinger(singer = "aa", song = "ssss") }
-        item { ItemSinger(singer = "aa", song = "ssss") }
-        item { ItemSinger(singer = "aa", song = "ssss") }
-        item { ItemSinger(singer = "aa", song = "ssss") }
-        item { ItemSinger(singer = "aa", song = "ssss") }
+fun LazyColumnSinger() {
+    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+        items(5) {
+            ItemSinger(singer = "aa", song = "ssss")
+        }
     }
 }
+
 @Composable
-fun ItemSinger(singer: String, song : String){
+fun ItemSinger(singer: String, song: String) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -164,72 +196,75 @@ fun ItemSinger(singer: String, song : String){
             .height(80.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Image(painterResource(id = R.drawable.img_1),
+        Image(
+            painter = painterResource(id = R.drawable.img_1),
             contentDescription = "",
             modifier = Modifier
                 .weight(1.5f)
                 .size(70.dp)
                 .padding(horizontal = 5.dp),
-            contentScale = ContentScale.Crop)
+            contentScale = ContentScale.Crop
+        )
         Spacer(modifier = Modifier.width(5.dp))
         Column(modifier = Modifier.weight(3f)) {
             Text(text = singer, fontWeight = FontWeight.SemiBold, fontSize = 18.sp)
             Text(text = song, color = Color.Gray, fontSize = 15.sp)
         }
-        Button(onClick = {  },
+        Button(
+            onClick = {},
             modifier = Modifier.weight(2f),
             colors = ButtonDefaults.buttonColors(
-            contentColor = Color.White,
-            containerColor = ColorButton),
+                contentColor = Color.White,
+                containerColor = ColorButton
+            ),
             shape = RoundedCornerShape(12.dp)
         ) {
             Text(text = "Follow")
         }
     }
 }
+
 @Composable
-fun TopProBar(
-    navController: NavController
-    ){
+fun TopProBar(navController: NavController) {
     var openDialog by remember { mutableStateOf(false) }
-    when {
-        openDialog -> {
-            UserDialog(
-                onDismissRequest = { openDialog = false },
-                onConfirmation = {
-                    openDialog = false
-                },
-            )
-        }
+    if (openDialog) {
+        UserDialog(
+            onDismissRequest = { openDialog = false },
+            onConfirmation = { openDialog = false }
+        )
     }
     Row(
         modifier = Modifier.padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceAround
     ) {
-        IconButton(onClick = {
-            navController.popBackStack()
-            },
-            modifier = Modifier.weight(1f)) {
+        IconButton(
+            onClick = { navController.popBackStack() },
+            modifier = Modifier.weight(1f)
+        ) {
             Icon(imageVector = Icons.Default.KeyboardArrowLeft, contentDescription = null)
         }
-        Text(text = "Profile",
+        Text(
+            text = "Profile",
             textAlign = TextAlign.Center,
             fontWeight = FontWeight.SemiBold,
             fontSize = 20.sp,
-            modifier = Modifier.weight(3f))
-        IconButton(onClick = { openDialog = true},
+            modifier = Modifier.weight(3f)
+        )
+        IconButton(
+            onClick = { openDialog = true },
             modifier = Modifier.weight(1f)
         ) {
             Icon(imageVector = Icons.Outlined.Create, contentDescription = null)
         }
     }
 }
+
 @Composable
 fun UserDialog(
     onDismissRequest: () -> Unit,
-    onConfirmation: () -> Unit,
-){
+    onConfirmation: () -> Unit
+) {
     val viewModel: AuthViewModel = viewModel()
     val user by viewModel.currentUser.collectAsState()
     val updateResult by viewModel.updateResult.collectAsState()
@@ -248,102 +283,99 @@ fun UserDialog(
 
     LaunchedEffect(updateResult) {
         updateResult?.let {
-            if (it) {
-                Toast.makeText(context, "Cập nhật thành công!", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(context, "Cập nhật thất bại", Toast.LENGTH_SHORT).show()
-            }
+            val msg = if (it) "Cập nhật thành công!" else "Cập nhật thất bại"
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
         }
     }
 
-    Dialog(onDismissRequest = { onDismissRequest}) {
+    Dialog(onDismissRequest = { onDismissRequest() }) {
         Box(
             contentAlignment = Alignment.Center,
             modifier = Modifier
                 .size(300.dp, 500.dp)
                 .background(Color.White, shape = RoundedCornerShape(12.dp))
-            ){
+        ) {
             Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp, vertical = 30.dp)
+                    .background(Color.White),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Image(
+                    painter = rememberAsyncImagePainter(photoUri ?: user?.photoUrl ?: R.drawable.img_bachduong),
+                    contentDescription = null,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 20.dp, vertical = 30.dp)
-                        .background(Color.White),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .clip(CircleShape)
+                        .size(90.dp)
+                        .clickable { imagePickerLauncher.launch("image/*") }
+                        .border(1.dp, ColorButton),
+                    contentScale = ContentScale.Crop
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                OutlinedTextField(
+                    value = username,
+                    onValueChange = { username = it },
+                    label = { Text("Username", fontSize = 15.sp, color = ColorButton) },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next
+                    )
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email", fontSize = 15.sp, color = ColorButton) },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next
+                    )
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = { phone = it },
+                    label = { Text("Phone", fontSize = 15.sp, color = ColorButton) },
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text,
+                        imeAction = ImeAction.Next
+                    )
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
                 ) {
-                    Image(
-                        painter = rememberAsyncImagePainter(photoUri ?: user?.photoUrl ?: R.drawable.img_bachduong),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .clip(shape = CircleShape)
-                            .size(90.dp)
-                            .clickable { imagePickerLauncher.launch("image/*") }
-                            .border(1.dp, ColorButton),
-                        contentScale = ContentScale.Crop
-                    )
-                    Spacer(modifier = Modifier.height(20.dp))
-                    OutlinedTextField(
-                        value = username,
-                        onValueChange = { username = it},
-                        label = { Text(text = "Username", fontSize = 15.sp, color = ColorButton) },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Text,
-                            imeAction = ImeAction.Next
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it},
-                        label = { Text(text = "Email", fontSize = 15.sp, color = ColorButton) },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Text,
-                            imeAction = ImeAction.Next
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    OutlinedTextField(
-                        value = phone,
-                        onValueChange = { phone = it},
-                        label = { Text(text = "Phone", fontSize = 15.sp, color = ColorButton) },
-                        modifier = Modifier.fillMaxWidth(),
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Text,
-                            imeAction = ImeAction.Next
-                        )
-                    )
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
+                    TextButton(
+                        onClick = { onDismissRequest() },
+                        modifier = Modifier.padding(8.dp)
                     ) {
-                        TextButton(
-                            onClick = { onDismissRequest() },
-                            modifier = Modifier.padding(8.dp),
-                        ) {
-                            Text("Cancel")
-                        }
-                        TextButton(
-                            onClick = {
-                                onConfirmation()
-                                user?.let {
-                                    val updatedUser = it.copy(
-                                        username = username,
-                                        email = email,
-                                        phoneNumber = phone,
-                                        photoUrl = photoUri?.toString() ?: it.photoUrl
-                                    )
-                                    viewModel.updateUser(updatedUser)
-                                }
-                                      },
-                            modifier = Modifier.padding(8.dp),
-                        ) {
-                            Text("Confirm")
-                        }
+                        Text("Cancel")
+                    }
+                    TextButton(
+                        onClick = {
+                            user?.let {
+                                val updatedUser = it.copy(
+                                    username = username,
+                                    email = email,
+                                    phoneNumber = phone,
+                                    photoUrl = photoUri?.toString() ?: it.photoUrl
+                                )
+                                viewModel.updateUser(updatedUser)
+                                viewModel.updateUserEmailAndFirestore(email)
+                            }
+                            onConfirmation()
+                        },
+                        modifier = Modifier.padding(8.dp)
+                    ) {
+                        Text("Confirm")
                     }
                 }
+            }
         }
     }
 }

@@ -79,9 +79,13 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
     implementation ("com.google.firebase:firebase-auth-ktx")
     implementation ("com.google.firebase:firebase-firestore-ktx")
+    implementation("com.google.firebase:firebase-storage-ktx")
     // Google Sign-In
     implementation ("com.google.android.gms:play-services-auth:20.7.0")
 
 // Facebook Login
     implementation ("com.facebook.android:facebook-android-sdk:16.1.2")
+    // keo update thong tin
+    implementation ("com.google.accompanist:accompanist-swiperefresh:0.31.5-beta")
+
 }
