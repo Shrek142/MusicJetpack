@@ -1,5 +1,6 @@
 package com.example.musicappmvvmjetpack.ViewModel
 
+import android.app.Activity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.musicappmvvmjetpack.Model.User
@@ -95,6 +96,17 @@ class AuthViewModel : ViewModel() {
             }
         }
     }
+
+    fun loginWithGitHub(activity: Activity) {
+        repository.loginWithGitHub(activity) { success, error ->
+            _authResult.value = success
+            _errorMessage.value = error
+            if (success) {
+                loadCurrentUser()
+            }
+        }
+    }
+
     fun logout() {
         repository.logout()
         _currentUser.value = null

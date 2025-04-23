@@ -1,11 +1,13 @@
 package com.example.musicappmvvmjetpack.repository
 
+import android.app.Activity
 import com.example.musicappmvvmjetpack.Model.User
 import com.facebook.AccessToken
 import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.OAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
@@ -112,6 +114,47 @@ class AuthRepository {
                 onResult(task.isSuccessful)
             }
     }
+
+    fun loginWithGitHub(activity: Activity, onResult: (Boolean, String?) -> Unit) {
+        val provider = OAuthProvider.newBuilder("github.com")
+        provider.addCustomParameter("allow_signup", "false")
+        provider.setScopes(listOf("user:email"))
+
+        val auth = FirebaseAuth.getInstance()
+        val pending = auth.pendingAuthResult
+
+        if (pending != null) {
+            pending
+                .addOnSuccessListener { onResult(true, null) }
+                .addOnFailureListener { onResult(false, it.message) }
+        } else {
+            auth.startActivityForSignInWithProvider(activity, provider.build())
+                .addOnSuccessListener { authResult ->
+                    // Lưu thông tin người dùng vào Firestore nếu chưa có
+                    val user = authResult.user
+                    val uid = user?.uid ?: return@addOnSuccessListener
+                    val userDoc = FirebaseFirestore.getInstance().collection("users").document(uid)
+
+                    userDoc.get().addOnSuccessListener { doc ->
+                        if (!doc.exists()) {
+                            val newUser = User(
+                                uid = uid,
+                                email = user.email ?: "",
+                                username = user.displayName ?: "GitHub User",
+                                phoneNumber = "",
+                                photoUrl = user.photoUrl?.toString() ?: ""
+                            )
+                            userDoc.set(newUser)
+                        }
+                    }
+
+                    onResult(true, null)
+                }
+                .addOnFailureListener { onResult(false, it.message) }
+        }
+    }
+
+
     fun logout() {
         FirebaseAuth.getInstance().signOut()
     }

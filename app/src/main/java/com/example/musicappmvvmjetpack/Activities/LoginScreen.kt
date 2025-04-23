@@ -264,6 +264,19 @@ fun LoginScreen(
                         googleLauncher.launch(signInIntent)
                     },
                 contentScale = ContentScale.Fit)
+            Spacer(modifier = Modifier.width(30.dp))
+            Image(
+                painterResource(id = R.drawable.git),
+                contentDescription = null,
+                modifier = Modifier
+                    .clip(shape = CircleShape)
+                    .size(50.dp)
+                    .clip(RoundedCornerShape(30.dp))
+                    .clickable {
+                        val activity = context.findActivity()  // Extension function
+                        viewModel.loginWithGitHub(activity)
+                    },
+                contentScale = ContentScale.Fit)
         }
     }
     DisposableEffect(Unit) {
