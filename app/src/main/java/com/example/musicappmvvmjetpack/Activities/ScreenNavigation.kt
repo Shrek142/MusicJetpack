@@ -42,6 +42,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import coil.compose.AsyncImage
 import com.example.musicappmvvmjetpack.Activities.theme.ColorButton
+import com.example.musicappmvvmjetpack.Model.Music
 import com.example.musicappmvvmjetpack.R
 import com.example.musicappmvvmjetpack.ViewModel.MusicViewModel
 import com.example.musicappmvvmjetpack.ViewModel.MusicViewModelFactory
@@ -65,7 +66,7 @@ fun ScreenNavigation(){
 
     NavHost(navController = navController, startDestination = Screen.SPLSCREEN.route){
 
-        composable(Screen.SPLSCREEN.route) { SplashFragment() }
+        composable(Screen.SPLSCREEN.route) { SplScreen(navController) }
 
         composable(Screen.HOMESCREEN.route){
             Scaffold(
@@ -127,10 +128,10 @@ fun ScreenNavigation(){
             }
         }
         composable(Screen.SEARCHSCREEN.route) {
-            SearchFragment()
+            SearchScreen(musicList = Music.getMusic(), navController)
         }
-        composable(Screen.LOGIN.route) { LogInFragment() }
-        composable(Screen.SIGNUP.route) { SignUpFragment() }
+        composable(Screen.LOGIN.route) { LoginScreen(navController) }
+        composable(Screen.SIGNUP.route) { SignUpScreen(navController) }
     }
 }
 @Composable
