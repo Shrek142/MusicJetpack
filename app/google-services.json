@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "11584143416",
+    "firebase_url": "https://musicappmvvmjetpack-default-rtdb.firebaseio.com",
+    "project_id": "musicappmvvmjetpack",
+    "storage_bucket": "musicappmvvmjetpack.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:11584143416:android:6c2242ebd39fa01c8fe6cd",
+        "android_client_info": {
+          "package_name": "com.example.musicappmvvmjetpack"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBHx8EEepfvm_rvIJXFfm6mq1a0gpmCo1A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
