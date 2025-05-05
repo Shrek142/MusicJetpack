@@ -1,5 +1,9 @@
 package com.example.musicappmvvmjetpack.Activities
 
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,13 +40,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.findNavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.example.musicappmvvmjetpack.Activities.theme.ColorButton
@@ -52,7 +59,22 @@ import com.example.musicappmvvmjetpack.ViewModel.AuthViewModel
 import com.example.musicappmvvmjetpack.ViewModel.MusicViewModel
 import kotlinx.coroutines.delay
 
+class HomeFragment : Fragment() {
 
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return ComposeView(requireContext()).apply {
+            setContent {
+                val navController = findNavController()
+                val musicViewModel: MusicViewModel = viewModel()
+                // Truyền danh sách nhạc từ ViewModel hoặc một nguồn khác
+                HomeScreen(navController = navController, musicViewModel = musicViewModel, padding = Modifier)
+            }
+        }
+    }
+}
 @Composable
 fun HomeScreen(navController: NavController, musicViewModel: MusicViewModel, padding: Modifier){
     val musicState = musicViewModel.musics.observeAsState(initial = emptyList())

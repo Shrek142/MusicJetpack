@@ -1,5 +1,6 @@
 package com.example.musicappmvvmjetpack.Activities
 
+import android.os.Bundle
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -41,7 +42,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import coil.compose.AsyncImage
 import com.example.musicappmvvmjetpack.Activities.theme.ColorButton
-import com.example.musicappmvvmjetpack.Model.Music
 import com.example.musicappmvvmjetpack.R
 import com.example.musicappmvvmjetpack.ViewModel.MusicViewModel
 import com.example.musicappmvvmjetpack.ViewModel.MusicViewModelFactory
@@ -64,6 +64,9 @@ fun ScreenNavigation(){
     val musicViewModel: MusicViewModel = viewModel(factory = MusicViewModelFactory(LocalContext.current))
 
     NavHost(navController = navController, startDestination = Screen.SPLSCREEN.route){
+
+        composable(Screen.SPLSCREEN.route) { SplashFragment() }
+
         composable(Screen.HOMESCREEN.route){
             Scaffold(
                 bottomBar = {
@@ -73,7 +76,7 @@ fun ScreenNavigation(){
                     }
                 }
             ) {innerPadding ->
-                HomeScreen(navController, musicViewModel, Modifier.padding(innerPadding))
+                HomeScreen(navController = navController, musicViewModel = musicViewModel, padding = Modifier.padding(innerPadding))
             }
         }
         composable(Screen.ALBUMSCREEN.route){
@@ -85,7 +88,7 @@ fun ScreenNavigation(){
                     }
                 }
             ) {innerPadding ->
-                AlbumScreen(navController, musicViewModel, Modifier.padding(innerPadding))
+                AlbumScreen(navController = navController, musicViewModel = musicViewModel, padding = Modifier.padding(innerPadding))
             }
         }
         composable(Screen.FAVORITESCREEN.route) {
@@ -97,7 +100,7 @@ fun ScreenNavigation(){
                     }
                 }
             ) {innerPadding ->
-                FavoriteScreen(navController, musicViewModel, Modifier.padding(innerPadding))
+                FavoriteScreen(navController = navController, musicViewModel = musicViewModel, padding = Modifier.padding(innerPadding))
             }
         }
         composable(Screen.PROFILE.route) {
@@ -109,21 +112,25 @@ fun ScreenNavigation(){
                     }
                 }
             ) {innerPadding ->
-                ProfileScreen(navController, Modifier.padding(innerPadding))
+                ProfileScreen(navController = navController, padding = Modifier.padding(innerPadding))
             }
         }
         composable(
             "${Screen.PLAYMUSICSCREEN.route}/{id}",
-            arguments = listOf(navArgument("id") {type = NavType.StringType}),
-        ){backStackEntry ->
-            backStackEntry.arguments?.getString("id")?.let { id ->
-                PlayMusicScreen(navController,musicViewModel, id )
+            arguments = listOf(navArgument("id") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val musicId = backStackEntry.arguments?.getString("id")
+            PlayMusicFragment().apply {
+                arguments = Bundle().apply {
+                    putString("musicId", musicId)
+                }
             }
         }
-        composable(Screen.SEARCHSCREEN.route) { SearchScreen(musicList = Music.getMusic(), navController) }
-        composable(Screen.SPLSCREEN.route) { SplScreen(navController) }
-        composable(Screen.LOGIN.route) { LoginScreen( navController) }
-        composable(Screen.SIGNUP.route) { SignUpScreen(navController) }
+        composable(Screen.SEARCHSCREEN.route) {
+            SearchFragment()
+        }
+        composable(Screen.LOGIN.route) { LogInFragment() }
+        composable(Screen.SIGNUP.route) { SignUpFragment() }
     }
 }
 @Composable
@@ -204,7 +211,7 @@ fun BottomBar(navController: NavController, currentScreen: Screen){
                     contentDescription = "",
                     tint = if (currentScreen == Screen.FAVORITESCREEN) ColorButton else Color.Gray
                 )
-                Text("My Favotite", color = if (currentScreen == Screen.FAVORITESCREEN) ColorButton else Color.Gray)
+                Text("My Favorite", color = if (currentScreen == Screen.FAVORITESCREEN) ColorButton else Color.Gray)
             }
         }
 
