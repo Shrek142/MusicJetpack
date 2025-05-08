@@ -1,6 +1,7 @@
 package com.example.musicappmvvmjetpack.ViewModel
 
 import android.app.Activity
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.musicappmvvmjetpack.Model.User
@@ -25,10 +26,13 @@ class AuthViewModel : ViewModel() {
     private val _updateResult = MutableStateFlow<Boolean?>(null)
     val updateResult: StateFlow<Boolean?> = _updateResult
 
+    init {
+        loadCurrentUser()
+    }
+
     fun loadCurrentUser() {
         viewModelScope.launch {
-            val user = repository.getCurrentUser()  // Gọi repository để lấy thông tin người dùng
-            _currentUser.value = user  // Lưu vào StateFlow để UI có thể quan sát
+            _currentUser.value = repository.getCurrentUser()
         }
     }
 
@@ -36,15 +40,17 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             val result = repository.updateUserProfile(user)
             _updateResult.value = result.isSuccess
+            Log.d("AuthViewModel", "Update user result: ${result.isSuccess}, language: ${user.language}")
+            if (result.isSuccess) _currentUser.value = user
         }
     }
-
 
     fun register(email: String, password: String, username: String, phoneNumber: String) {
         viewModelScope.launch {
             val result = repository.register(email, password, username, phoneNumber)
             _authResult.value = result.isSuccess
             _errorMessage.value = result.exceptionOrNull()?.message
+            if (result.isSuccess) loadCurrentUser()
         }
     }
 
@@ -52,12 +58,21 @@ class AuthViewModel : ViewModel() {
         viewModelScope.launch {
             val success = repository.login(email, password)
             _authResult.value = success
+            if (success) loadCurrentUser()
         }
     }
 
-    fun resetAuthResult() {
-        _authResult.value = null
-        _errorMessage.value = null
+    fun updateUserEmailAndFirestore(newEmail: String) {
+        viewModelScope.launch {
+            repository.updateUserEmail(newEmail) { success ->
+                if (success) {
+                    val updated = _currentUser.value?.copy(email = newEmail)
+                    if (updated != null) updateUser(updated)
+                } else {
+                    _errorMessage.value = "Không thể cập nhật email đăng nhập"
+                }
+            }
+        }
     }
     fun loginWithGoogle(idToken: String) {
         viewModelScope.launch {
@@ -84,19 +99,6 @@ class AuthViewModel : ViewModel() {
             _authResult.value = success
         }
     }
-    fun updateUserEmailAndFirestore(newEmail: String) {
-        val currentUser = _currentUser.value ?: return
-
-        repository.updateUserEmail(newEmail) { success ->
-            if (success) {
-                val updated = currentUser.copy(email = newEmail)
-                updateUser(updated)
-            } else {
-                _errorMessage.value = "Không thể cập nhật email đăng nhập"
-            }
-        }
-    }
-
     fun loginWithGitHub(activity: Activity) {
         repository.loginWithGitHub(activity) { success, error ->
             _authResult.value = success
@@ -107,9 +109,13 @@ class AuthViewModel : ViewModel() {
         }
     }
 
+    fun resetAuthResult() {
+        _authResult.value = null
+        _errorMessage.value = null
+    }
+
     fun logout() {
         repository.logout()
         _currentUser.value = null
     }
-
 }

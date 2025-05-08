@@ -42,6 +42,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -49,7 +50,7 @@ import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.findNavController
+import androidx.navigation.fragment.findNavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.example.musicappmvvmjetpack.Activities.theme.ColorButton
@@ -94,7 +95,7 @@ fun HomeScreen(navController: NavController, musicViewModel: MusicViewModel, pad
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text(text = "Most Popular",
+            Text(text = stringResource(id = R.string.home_2),
                 modifier = Modifier.weight(2f),
                 fontWeight = FontWeight.Bold,
                 fontSize = 25.sp)
@@ -104,7 +105,7 @@ fun HomeScreen(navController: NavController, musicViewModel: MusicViewModel, pad
                     containerColor = ColorButton
                 ),
                 modifier = Modifier.weight(1f)) {
-                Text(text = "View All",
+                Text(text = stringResource(id = R.string.home_3),
                     fontSize = 15.sp,
                     modifier = Modifier.clickable {
                         navController.navigate(Screen.ALBUMSCREEN.route)
@@ -186,7 +187,7 @@ fun TopHomeBar(){
             Column(
                 modifier = Modifier.weight(2f)
             ) {
-                Text(text = "Hello", fontSize = 15.sp)
+                Text(text = stringResource(id = R.string.home_1), fontSize = 15.sp)
                 Text(text = it.username ?: "User", fontSize = 30.sp, fontWeight = FontWeight.SemiBold)
             }
             //CircleAvatar()

@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -100,7 +101,9 @@ fun PlayMusicForm(musicViewModel: MusicViewModel, navController: NavController){
             topBar = {TopPlayBar(navController, musicViewModel, music)}
         ) {
             Column(
-                modifier = Modifier.padding(horizontal = 60.dp).clip(RoundedCornerShape(16.dp)) // Bo tròn góc
+                modifier = Modifier
+                    .padding(horizontal = 60.dp)
+                    .clip(RoundedCornerShape(16.dp))
                     .background(Color.White),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -230,7 +233,7 @@ fun TopPlayBar(navController: NavController, musicViewModel: MusicViewModel, mus
         }
 
         Text(
-            text = "Now Playing",
+            text = stringResource(id = R.string.play_music),
             textAlign = TextAlign.Center,
             fontWeight = FontWeight.SemiBold,
             fontSize = 20.sp,

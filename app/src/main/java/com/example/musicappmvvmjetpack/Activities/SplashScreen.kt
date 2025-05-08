@@ -43,7 +43,8 @@ import com.google.firebase.auth.FirebaseAuth
 class SplashFragment : Fragment() {
 
     override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
+        inflater: LayoutInflater,
+        container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         return ComposeView(requireContext()).apply {
@@ -56,27 +57,36 @@ class SplashFragment : Fragment() {
 }
 
 @Composable
-fun SplScreen(navController: NavController){
+fun SplScreen(navController: NavController, ) {
     val isLoggedIn = FirebaseAuth.getInstance().currentUser != null
 
     Column(
         modifier = Modifier.padding(horizontal = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+    ) {
         Spacer(modifier = Modifier.height(40.dp))
         ColorfulCircles()
         Spacer(modifier = Modifier.height(30.dp))
-        Text(text = buildAnnotatedString {
-            withStyle(style = SpanStyle(color = Color.Black)){
-                append("Listen To Your ")
-            }
-            withStyle(style = SpanStyle(color = ColorButton)){
-                append("Heart")
-            } },
+        Text(
+            text = buildAnnotatedString {
+                withStyle(style = SpanStyle(color = Color.Black)) {
+                    append(stringResource(id = R.string.splash_1))
+                }
+                append(" ")
+                withStyle(style = SpanStyle(color = ColorButton)) {
+                    append(stringResource(id = R.string.splash_2))
+                }
+            },
             fontWeight = FontWeight.SemiBold,
-            fontSize = 20.sp)
+            fontSize = 20.sp
+        )
         Spacer(modifier = Modifier.height(20.dp))
-        Text(text = stringResource(id = R.string.splash), color = Color.Gray, fontSize = 12.sp, textAlign = TextAlign.Center)
+        Text(
+            text = stringResource(id = R.string.splash),
+            color = Color.Gray,
+            fontSize = 12.sp,
+            textAlign = TextAlign.Center
+        )
         Spacer(modifier = Modifier.height(200.dp))
         Button(
             onClick = { navController.navigate(if (isLoggedIn) Screen.HOMESCREEN.route else Screen.LOGIN.route) },
@@ -89,20 +99,23 @@ fun SplScreen(navController: NavController){
                 contentColor = Color.White
             )
         ) {
-            Text(text = "Get Started",fontSize = 17.sp)
+            Text(stringResource(id = R.string.splash_btn), fontSize = 17.sp)
         }
+
+        Spacer(modifier = Modifier.height(20.dp))
 
     }
 }
+
+
 @Composable
 fun ColorfulCircles() {
     val canvasSize = 350.dp
-    Box(modifier = Modifier.size(canvasSize)){
+    Box(modifier = Modifier.size(canvasSize)) {
         Canvas(modifier = Modifier.fillMaxSize()) {
             drawConcentricCircles()
         }
 
-        // Thêm biểu tượng ở giữa
         Image(
             painter = painterResource(id = R.drawable.ic_mic),
             contentDescription = null,
@@ -111,7 +124,6 @@ fun ColorfulCircles() {
                 .align(Alignment.Center)
         )
     }
-
 }
 
 fun DrawScope.drawConcentricCircles() {
@@ -131,7 +143,7 @@ fun DrawScope.drawConcentricCircles() {
     for ((index, color) in colors.withIndex()) {
         drawCircle(
             color = color,
-            radius = maxRadius - index * 20.dp.toPx(), // Điều chỉnh khoảng cách giữa các vòng
+            radius = maxRadius - index * 20.dp.toPx(),
             center = androidx.compose.ui.geometry.Offset(centerX, centerY),
             style = androidx.compose.ui.graphics.drawscope.Fill
         )

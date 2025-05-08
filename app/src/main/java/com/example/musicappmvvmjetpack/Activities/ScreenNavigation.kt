@@ -1,6 +1,6 @@
 package com.example.musicappmvvmjetpack.Activities
 
-import android.os.Bundle
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -66,8 +66,10 @@ fun ScreenNavigation(){
 
     NavHost(navController = navController, startDestination = Screen.SPLSCREEN.route){
 
-        composable(Screen.SPLSCREEN.route) { SplScreen(navController) }
-
+        composable(Screen.SPLSCREEN.route) {
+            SplScreen(navController)
+            //FragmentContainer(fragmentClass = SplashFragment::class.java, navController)
+        }
         composable(Screen.HOMESCREEN.route){
             Scaffold(
                 bottomBar = {
@@ -77,7 +79,7 @@ fun ScreenNavigation(){
                     }
                 }
             ) {innerPadding ->
-                HomeScreen(navController = navController, musicViewModel = musicViewModel, padding = Modifier.padding(innerPadding))
+                HomeScreen(navController, musicViewModel, Modifier.padding(innerPadding))
             }
         }
         composable(Screen.ALBUMSCREEN.route){
@@ -89,7 +91,7 @@ fun ScreenNavigation(){
                     }
                 }
             ) {innerPadding ->
-                AlbumScreen(navController = navController, musicViewModel = musicViewModel, padding = Modifier.padding(innerPadding))
+                AlbumScreen( navController, musicViewModel, Modifier.padding(innerPadding))
             }
         }
         composable(Screen.FAVORITESCREEN.route) {
@@ -101,7 +103,7 @@ fun ScreenNavigation(){
                     }
                 }
             ) {innerPadding ->
-                FavoriteScreen(navController = navController, musicViewModel = musicViewModel, padding = Modifier.padding(innerPadding))
+                FavoriteScreen(navController, musicViewModel, Modifier.padding(innerPadding))
             }
         }
         composable(Screen.PROFILE.route) {
@@ -113,25 +115,26 @@ fun ScreenNavigation(){
                     }
                 }
             ) {innerPadding ->
-                ProfileScreen(navController = navController, padding = Modifier.padding(innerPadding))
+                ProfileScreen(navController, Modifier.padding(innerPadding))
             }
         }
         composable(
             "${Screen.PLAYMUSICSCREEN.route}/{id}",
-            arguments = listOf(navArgument("id") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val musicId = backStackEntry.arguments?.getString("id")
-            PlayMusicFragment().apply {
-                arguments = Bundle().apply {
-                    putString("musicId", musicId)
-                }
+            arguments = listOf(navArgument("id") {type = NavType.StringType}),
+        ){backStackEntry ->
+            backStackEntry.arguments?.getString("id")?.let { id ->
+                PlayMusicScreen(navController,musicViewModel, id )
             }
         }
         composable(Screen.SEARCHSCREEN.route) {
             SearchScreen(musicList = Music.getMusic(), navController)
         }
-        composable(Screen.LOGIN.route) { LoginScreen(navController) }
-        composable(Screen.SIGNUP.route) { SignUpScreen(navController) }
+        composable(Screen.LOGIN.route) {
+            LoginScreen(navController)
+        }
+        composable(Screen.SIGNUP.route) {
+            SignUpScreen(navController)
+        }
     }
 }
 @Composable

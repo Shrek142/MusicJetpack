@@ -35,6 +35,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -44,6 +45,7 @@ import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
 import com.example.musicappmvvmjetpack.Model.Music
+import com.example.musicappmvvmjetpack.R
 
 class SearchFragment : Fragment() {
 
@@ -74,7 +76,7 @@ fun SearchScreen(musicList: List<Music>, navController: NavController) {
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
-            placeholder = { Text(text = "Search singer, song...")},
+            placeholder = { Text(text = stringResource(id = R.string.search))},
             leadingIcon = { Icon(Icons.Default.Search, contentDescription = "")},
             shape = RoundedCornerShape(30.dp),
             modifier = Modifier
@@ -97,7 +99,7 @@ fun SearchScreen(musicList: List<Music>, navController: NavController) {
                 }
             }
         } else {
-            Text(text = "Không tìm thấy bài hát nào", style = MaterialTheme.typography.bodyMedium)
+            Text(text = stringResource(id = R.string.search_fail), style = MaterialTheme.typography.bodyMedium)
         }
     }
 }

@@ -1,6 +1,66 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">MusicAppMVVMJetpack</string>
+
+
+    <string name="home">Home</string>
+    <string name="album">Album</string>
+    <string name="favorite">My Favorite</string>
+    <string name="profile">Profile</string>
+
+    <string name="splash_1">Liston to your </string>
+    <string name="splash_2"> Heart</string>
     <string name="splash">Best Free Music Streaming Services\n The free version of Music works a bit differently \n from the other services</string>
+    <string name="splash_btn">Get Started</string>
+
+    <string name="login">Log In</string>
+    <string name="login_1">Log in your account</string>
+    <string name="login_2"> Don\'t have an account? </string>
+
+    <string name="signup">Sign Up</string>
+    <string name="signup_1">Create your account</string>
+    <string name="signup_2">Already have an account ?</string>
+
+    <string name="pass">Password</string>
+    <string name="confirmpass">Confirm Password</string>
+    <string name="username">Username</string>
+    <string name="phone">Phone</string>
+    <string name="email">Email</string>
+
+    <string name="or" >Or</string>
+
+    <string name="home_1">Hello</string>
+    <string name="home_2">Most Popular</string>
+    <string name="home_3">View All</string>
+    <string name="home_4">Dowload</string>
+
+    <string name="favorite_1">Don\'t have favorite song</string>
+
+    <string name="profile_1">Followed Singer</string>
+    <string name="profile_2">Playlist</string>
+    <string name="profile_3">Followed Albums</string>
+    <string name="signout">Sign Out</string>
+    <string name="profile_4">Followed Artists</string>
+    <string name="profile_btn_follow">Follow</string>
+
+    <string name="play_music">Now Playing</string>
+
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_confirm">Confirm</string>
+
+    <string name="search">Search singer, song...</string>
+    <string name="search_fail">No singer, song</string>
+
+    <string name="english">English</string>
+    <string name="vietnam">Vietnamese</string>
+    <string name="language">Language</string>
+
+    <string name="update_ok">Update success</string>
+    <string name="update_fail">Update fail</string>
+    <string name="login_fail">Wrong Email or Password</string>
+    <string name="register_ok">Register success</string>
+    <string name="register_fail">Register fail</string>
+
+
     <string name="default_web_client_id">11584143416-ibalnlggbpe9su1psf2phvjgmit4c4je.apps.googleusercontent.com</string>
     <string name="facebook_app_id">1197047348476981</string>
     <string name="fb_login_protocol_scheme">fb1197047348476981</string>

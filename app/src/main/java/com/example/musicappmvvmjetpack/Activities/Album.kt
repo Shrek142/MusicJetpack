@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -79,7 +80,7 @@ fun AlbumScreen(navController: NavController, musicViewModel: MusicViewModel, pa
         ) {
             Spacer(modifier = Modifier.height(70.dp))
             Image(
-                painterResource(id = R.drawable.img),
+                painterResource(id = R.drawable.banner2),
                 contentDescription = "",
                 alignment = Alignment.Center,
                 contentScale = ContentScale.FillWidth,
@@ -117,7 +118,7 @@ fun TopAlbumBar(navController: NavController){
             modifier = Modifier.weight(1f)) {
             Icon(imageVector = Icons.Default.KeyboardArrowLeft, contentDescription = null)
         }
-        Text(text = "Album",
+        Text(text = stringResource(id = R.string.album),
             textAlign = TextAlign.Center,
             fontWeight = FontWeight.SemiBold,
             fontSize = 20.sp,
@@ -142,7 +143,8 @@ fun ItemAlbum(music: Music,musicViewModel: MusicViewModel, onMusicClick: (id: St
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth().padding(vertical = 15.dp),
+                .fillMaxWidth()
+                .padding(vertical = 15.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(

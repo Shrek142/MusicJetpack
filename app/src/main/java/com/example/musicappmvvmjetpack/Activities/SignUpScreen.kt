@@ -39,6 +39,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -87,16 +88,19 @@ fun SignUpScreen(
     var username by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
 
+    val registerOkMessage = stringResource(id = R.string.register_ok)
+    val registerFailMessage = stringResource(id = R.string.register_fail)
+
     LaunchedEffect(result) {
         result?.let {
             if (it) {
                 viewModel.loadCurrentUser()
-                Toast.makeText(context, "Đăng ký thành công", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, registerOkMessage, Toast.LENGTH_SHORT).show()
                 navController.navigate(Screen.LOGIN.route) {
                     popUpTo(Screen.SIGNUP.route) { inclusive = true }
                 }
             } else {
-                Toast.makeText(context, errorMessage ?: "Đăng ký thất bại", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, errorMessage ?: registerFailMessage, Toast.LENGTH_SHORT).show()
             }
             viewModel.resetAuthResult()
         }
@@ -111,9 +115,9 @@ fun SignUpScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Spacer(modifier = Modifier.height(30.dp))
-        Text(text = "Sign Up", fontWeight = FontWeight.SemiBold, fontSize = 30.sp)
+        Text(text = stringResource(id = R.string.signup), fontWeight = FontWeight.SemiBold, fontSize = 30.sp)
         Spacer(modifier = Modifier.height(15.dp))
-        Text(text = "Create your account", color = Color.Gray, fontSize = 20.sp)
+        Text(text = stringResource(id = R.string.signup_1), color = Color.Gray, fontSize = 20.sp)
         Spacer(modifier = Modifier.height(30.dp))
         Image(
             painterResource(id = R.drawable.ic_mic),
@@ -136,7 +140,7 @@ fun SignUpScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text(text = "Password", fontSize = 15.sp, color = ColorButton) },
+            label = { Text(text = stringResource(id = R.string.pass), fontSize = 15.sp, color = ColorButton) },
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = {
                 IconButton(onClick = { isShowed1 = !isShowed1 }) {
@@ -157,7 +161,7 @@ fun SignUpScreen(
         OutlinedTextField(
             value = confirm,
             onValueChange = { confirm = it },
-            label = { Text(text = "Confirm Password", fontSize = 15.sp, color = ColorButton) },
+            label = { Text(text = stringResource(id = R.string.confirmpass), fontSize = 15.sp, color = ColorButton) },
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = {
                 IconButton(onClick = { isShowed2 = !isShowed2 }) {
@@ -178,7 +182,7 @@ fun SignUpScreen(
         OutlinedTextField(
             value = username,
             onValueChange = { username = it },
-            label = { Text(text = "Username", fontSize = 15.sp, color = ColorButton) },
+            label = { Text(text = stringResource(id = R.string.username), fontSize = 15.sp, color = ColorButton) },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
@@ -189,7 +193,7 @@ fun SignUpScreen(
         OutlinedTextField(
             value = phoneNumber,
             onValueChange = { phoneNumber = it },
-            label = { Text(text = "Phone", fontSize = 15.sp, color = ColorButton) },
+            label = { Text(text = stringResource(id = R.string.phone), fontSize = 15.sp, color = ColorButton) },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Number,
@@ -198,9 +202,9 @@ fun SignUpScreen(
         )
         Spacer(modifier = Modifier.height(10.dp))
         Row {
-            Text(text = "Already have an account?", fontSize = 15.sp, color = Color.Gray)
+            Text(text = stringResource(id = R.string.signup_2), fontSize = 15.sp, color = Color.Gray)
             Spacer(modifier = Modifier.width(5.dp))
-            Text(text = "Log In",
+            Text(text = stringResource(id = R.string.login),
                 fontSize = 15.sp,
                 color = ColorButton,
                 modifier = Modifier.clickable {
@@ -234,7 +238,7 @@ fun SignUpScreen(
             )
         ) {
             Text(
-                text = "Sign Up",
+                text = stringResource(id = R.string.signup),
                 modifier = Modifier.padding(6.dp)
             )
         }

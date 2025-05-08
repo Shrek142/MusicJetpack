@@ -1,0 +1,67 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <string name="app_name">MusicAppMVVMJetpack</string>
+
+    <string name="home">Home</string>
+    <string name="album">Album</string>
+    <string name="favorite">Yêu thích</string>
+    <string name="profile">Cá nhân</string>
+
+    <string name="splash_1">Lắng nghe </string>
+    <string name="splash_2"> trái tim bạn</string>
+    <string name="splash">Best Free Music Streaming Services\n The free version of Music works a bit differently \n from the other services</string>
+    <string name="splash_btn">Bắt đầu</string>
+
+    <string name="login">Đăng nhập</string>
+    <string name="login_1">Đăng nhập tài khoản của bạn</string>
+    <string name="login_2">Bạn chưa có tài khoản ?</string>
+
+    <string name="signup">Đăng kí</string>
+    <string name="signup_1">Tạo tài khoản của bạn</string>
+    <string name="signup_2">Bạn đã có tài khoản ?</string>
+
+    <string name="pass">Mật khẩu</string>
+    <string name="confirmpass">Xác nhận mật khẩu</string>
+    <string name="username">Tên người dùng</string>
+    <string name="phone">Số điện thoại</string>
+    <string name="email">Email</string>
+
+    <string name="or">hoặc</string>
+
+    <string name="home_1">Xin chào</string>
+    <string name="home_2">Phổ biến nhất</string>
+    <string name="home_3">Xem thêm</string>
+    <string name="home_4">Lượt tải</string>
+
+    <string name="favorite_1">Bạn chưa có bài hát yêu thích nào</string>
+
+    <string name="profile_1">Ca sĩ theo dõi</string>
+    <string name="profile_2">Playlist</string>
+    <string name="profile_3">Album theo dõi</string>
+    <string name="signout">Đăng xuất</string>
+    <string name="profile_4">Nhạc sĩ theo dõi</string>
+    <string name="profile_btn_follow">Theo dõi</string>
+
+    <string name="play_music">Đang phát</string>
+
+    <string name="dialog_cancel">Hủy</string>
+    <string name="dialog_confirm">Đồng ý</string>
+
+    <string name="search">Tìm ca sĩ, bài hát...</string>
+    <string name="search_fail">Không tìm thấy bài hát nào</string>
+
+    <string name="english">Tiếng Anh</string>
+    <string name="vietnam">Tiếng Việt</string>
+    <string name="language">Language</string>
+
+    <string name="update_ok">Cập nhật thành công!</string>
+    <string name="update_fail">Cập nhật thất bại</string>
+    <string name="login_fail">Sai email hoặc mật khẩu</string>
+    <string name="register_ok">Đăng kí thành công</string>
+    <string name="register_fail">Đăng kí thất bại</string>
+
+
+    <string name="default_web_client_id">11584143416-ibalnlggbpe9su1psf2phvjgmit4c4je.apps.googleusercontent.com</string>
+    <string name="facebook_app_id">1197047348476981</string>
+    <string name="fb_login_protocol_scheme">fb1197047348476981</string>
+
+</resources>

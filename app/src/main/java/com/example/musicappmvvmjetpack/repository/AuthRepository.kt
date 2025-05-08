@@ -20,22 +20,13 @@ class AuthRepository {
             val result = auth.createUserWithEmailAndPassword(email, password).await()
             val uid = result.user?.uid ?: return Result.failure(Exception("Không thể lấy UID"))
 
-            val user = User(uid, email, username, phoneNumber)
-
-            try {
-                db.collection("users").document(uid).set(user).await()
-                Result.success(true)
-            } catch (e: Exception) {
-                //lưu Firestore thất bại vẫn đã tạo user Firebase
-                Result.failure(Exception("không lưu được thông tin người dùng."))
-            }
-
+            val user = User(uid, email, username, phoneNumber, language = "vi")
+            db.collection("users").document(uid).set(user).await()
+            Result.success(true)
         } catch (e: Exception) {
-            // createUser thất bại
             Result.failure(e)
         }
     }
-
 
     suspend fun login(email: String, password: String): Boolean {
         return try {
@@ -45,14 +36,16 @@ class AuthRepository {
             false
         }
     }
+
     suspend fun getCurrentUser(): User? {
         val uid = auth.currentUser?.uid ?: return null
-        val doc = db.collection("users").document(uid).get().await()  // Lấy dữ liệu từ Firestore
-        return doc.toObject(User::class.java)  // Chuyển dữ liệu thành đối tượng User
+        val doc = db.collection("users").document(uid).get().await()
+        return doc.toObject(User::class.java)
     }
-    suspend fun updateUserProfile(updatedUser: User): Result<Boolean> {
+
+    suspend fun updateUserProfile(user: User): Result<Boolean> {
         return try {
-            db.collection("users").document(updatedUser.uid).set(updatedUser).await()
+            db.collection("users").document(user.uid).set(user).await()
             Result.success(true)
         } catch (e: Exception) {
             Result.failure(e)
@@ -60,17 +53,11 @@ class AuthRepository {
     }
 
     fun updateUserEmail(newEmail: String, onResult: (Boolean) -> Unit) {
-        val user = FirebaseAuth.getInstance().currentUser
-        if (user != null) {
-            user.updateEmail(newEmail)
-                .addOnCompleteListener { task ->
-                    onResult(task.isSuccessful)
-                }
-        } else {
-            onResult(false)
-        }
+        val user = auth.currentUser
+        user?.updateEmail(newEmail)
+            ?.addOnCompleteListener { onResult(it.isSuccessful) }
+            ?: onResult(false)
     }
-
 
     fun loginWithGoogleCredential(idToken: String, onResult: (FirebaseUser?, Boolean) -> Unit) {
         val credential = GoogleAuthProvider.getCredential(idToken, null)
@@ -79,17 +66,16 @@ class AuthRepository {
                 if (task.isSuccessful) {
                     val user = FirebaseAuth.getInstance().currentUser
                     if (user != null) {
-                        // Tạo đối tượng User
                         val userData = User(
                             uid = user.uid,
                             username = user.displayName ?: "",
                             email = user.email ?: "",
                             phoneNumber = user.phoneNumber ?: "",
                             photoUrl = user.photoUrl?.toString() ?: "",
-                            favoriteMusicId = emptyList()
+                            favoriteMusicId = emptyList(),
+                            language = "vi" // Khởi tạo ngôn ngữ mặc định
                         )
 
-                        // Lưu vào Firestore nếu chưa có
                         val userDoc = FirebaseFirestore.getInstance().collection("users").document(user.uid)
                         userDoc.get().addOnSuccessListener { snapshot ->
                             if (!snapshot.exists()) {
@@ -111,7 +97,30 @@ class AuthRepository {
         val credential = FacebookAuthProvider.getCredential(token.token)
         FirebaseAuth.getInstance().signInWithCredential(credential)
             .addOnCompleteListener { task ->
-                onResult(task.isSuccessful)
+                if (task.isSuccessful) {
+                    val user = FirebaseAuth.getInstance().currentUser
+                    if (user != null) {
+                        val userData = User(
+                            uid = user.uid,
+                            username = user.displayName ?: "",
+                            email = user.email ?: "",
+                            phoneNumber = user.phoneNumber ?: "",
+                            photoUrl = user.photoUrl?.toString() ?: "",
+                            favoriteMusicId = emptyList(),
+                            language = "vi" // Khởi tạo ngôn ngữ mặc định
+                        )
+
+                        val userDoc = db.collection("users").document(user.uid)
+                        userDoc.get().addOnSuccessListener { snapshot ->
+                            if (!snapshot.exists()) {
+                                userDoc.set(userData)
+                            }
+                        }
+                    }
+                    onResult(true)
+                } else {
+                    onResult(false)
+                }
             }
     }
 
@@ -130,10 +139,9 @@ class AuthRepository {
         } else {
             auth.startActivityForSignInWithProvider(activity, provider.build())
                 .addOnSuccessListener { authResult ->
-                    // Lưu thông tin người dùng vào Firestore nếu chưa có
                     val user = authResult.user
                     val uid = user?.uid ?: return@addOnSuccessListener
-                    val userDoc = FirebaseFirestore.getInstance().collection("users").document(uid)
+                    val userDoc = db.collection("users").document(uid)
 
                     userDoc.get().addOnSuccessListener { doc ->
                         if (!doc.exists()) {
@@ -142,7 +150,8 @@ class AuthRepository {
                                 email = user.email ?: "",
                                 username = user.displayName ?: "GitHub User",
                                 phoneNumber = "",
-                                photoUrl = user.photoUrl?.toString() ?: ""
+                                photoUrl = user.photoUrl?.toString() ?: "",
+                                language = "vi" // Khởi tạo ngôn ngữ mặc định
                             )
                             userDoc.set(newUser)
                         }
@@ -154,10 +163,7 @@ class AuthRepository {
         }
     }
 
-
     fun logout() {
         FirebaseAuth.getInstance().signOut()
     }
-
 }
-

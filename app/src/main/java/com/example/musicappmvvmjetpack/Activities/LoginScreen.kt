@@ -1,9 +1,6 @@
 package com.example.musicappmvvmjetpack.Activities
 
-import android.app.Activity
 import android.app.Application
-import android.content.Context
-import android.content.ContextWrapper
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -53,6 +50,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -92,19 +90,13 @@ class LogInFragment : Fragment() {
         }
     }
 }
-fun Context.findActivity(): Activity {
-    var context = this
-    while (context is ContextWrapper) {
-        if (context is Activity) return context
-        context = context.baseContext
-    }
-    throw IllegalStateException("")
-}
 @Composable
 fun LoginScreen(
     navController: NavController
 ) {
     val viewModel: AuthViewModel = viewModel()
+
+    val loginFailMessage = stringResource(id = R.string.login_fail)
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -153,7 +145,7 @@ fun LoginScreen(
                 viewModel.loadCurrentUser()
                 navController.navigate(Screen.HOMESCREEN.route)
             } else {
-                Toast.makeText(context, "Sai email hoặc mật khẩu", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, loginFailMessage, Toast.LENGTH_SHORT).show()
             }
             viewModel.resetAuthResult()
         }
@@ -169,9 +161,9 @@ fun LoginScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Spacer(modifier = Modifier.height(40.dp))
-        Text(text = "Log In", fontWeight = FontWeight.SemiBold, fontSize = 30.sp)
+        Text(text = stringResource(id = R.string.login), fontWeight = FontWeight.SemiBold, fontSize = 30.sp)
         Spacer(modifier = Modifier.height(20.dp))
-        Text(text = "Log in your account", color = Color.Gray, fontSize = 20.sp)
+        Text(text = stringResource(id = R.string.login_1), color = Color.Gray, fontSize = 20.sp)
         Spacer(modifier = Modifier.height(50.dp))
         Image(
             painterResource(id = R.drawable.ic_mic),
@@ -183,7 +175,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text(text = "Email", fontSize = 15.sp, color = ColorButton) },
+            label = { Text(text = stringResource(id = R.string.email), fontSize = 15.sp, color = ColorButton) },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
@@ -194,7 +186,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = password,
             onValueChange = { password = it },
-            label = { Text(text = "Password", fontSize = 15.sp, color = ColorButton) },
+            label = { Text(text = stringResource(id = R.string.pass), fontSize = 15.sp, color = ColorButton) },
             modifier = Modifier.fillMaxWidth(),
             trailingIcon = {
                 IconButton(onClick = { isShowed = !isShowed }) {
@@ -213,7 +205,7 @@ fun LoginScreen(
         )
         Spacer(modifier = Modifier.height(20.dp))
         Row {
-            Text(text = "Don't have an account?", fontSize = 15.sp, color = Color.Gray)
+            Text(text = stringResource(id = R.string.login_2), fontSize = 15.sp, color = Color.Gray)
             Spacer(modifier = Modifier.width(5.dp))
             Text(text = "Sign Up",
                 fontSize = 15.sp,
@@ -239,7 +231,7 @@ fun LoginScreen(
                 contentColor = Color.White
             )
         ) {
-            Text(text = "Log In", modifier = Modifier.padding(6.dp))
+            Text(text = stringResource(id = R.string.login), modifier = Modifier.padding(6.dp))
         }
         Spacer(modifier = Modifier.height(30.dp))
         Box(
@@ -250,7 +242,7 @@ fun LoginScreen(
                 thickness = 1.dp,
                 modifier = Modifier.padding(vertical = 8.dp)
             )
-            Text(text = "OR", modifier = Modifier
+            Text(text = stringResource(id = R.string.or), modifier = Modifier
                 .padding(vertical = 20.dp)
                 .background(Color.White))
         }
@@ -266,10 +258,16 @@ fun LoginScreen(
                     .size(50.dp)
                     .clip(RoundedCornerShape(30.dp))
                     .clickable {
-                        LoginManager.getInstance().logInWithReadPermissions(
-                            context.findActivity(),
-                            listOf("email", "public_profile")
-                        )
+                        context
+                            .findActivity()
+                            ?.let {
+                                LoginManager
+                                    .getInstance()
+                                    .logInWithReadPermissions(
+                                        it,
+                                        listOf("email", "public_profile")
+                                    )
+                            }
                     },
                 contentScale = ContentScale.Fit)
             Spacer(modifier = Modifier.width(30.dp))
@@ -295,7 +293,7 @@ fun LoginScreen(
                     .clip(RoundedCornerShape(30.dp))
                     .clickable {
                         val activity = context.findActivity()  // Extension function
-                        viewModel.loginWithGitHub(activity)
+                        activity?.let { viewModel.loginWithGitHub(it) }
                     },
                 contentScale = ContentScale.Fit)
         }
