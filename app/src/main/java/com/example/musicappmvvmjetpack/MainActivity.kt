@@ -2,17 +2,15 @@ package com.example.musicappmvvmjetpack
 
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.example.musicappmvvmjetpack.Activities.ScreenNavigation
+import androidx.appcompat.app.AppCompatActivity
+import com.example.musicappmvvmjetpack.Activities.MainScreen
 import com.example.musicappmvvmjetpack.Activities.theme.MusicAppMVVMJetpackTheme
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     override fun attachBaseContext(newBase: Context) {
         val prefs = newBase.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val language = prefs.getString("lang", "vi") ?: "vi"
-        Log.d("LanguageDebug", "Applying language from SharedPreferences: $language")
         val updatedContext = LanguageManager.setLocale(newBase, language)
         super.attachBaseContext(updatedContext)
     }
@@ -21,7 +19,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MusicAppMVVMJetpackTheme {
-                ScreenNavigation()
+                MainScreen()
             }
         }
     }

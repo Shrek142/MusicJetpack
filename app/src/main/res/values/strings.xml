@@ -41,6 +41,8 @@
     <string name="signout">Sign Out</string>
     <string name="profile_4">Followed Artists</string>
     <string name="profile_btn_follow">Follow</string>
+    <string name="artist">Artist</string>
+    <string name="song">Song</string>
 
     <string name="play_music">Now Playing</string>
 

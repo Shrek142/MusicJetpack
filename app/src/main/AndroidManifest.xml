@@ -42,6 +42,11 @@
             android:name="com.facebook.FacebookContentProvider"
             android:authorities="com.facebook.app.FacebookContentProvider1197047348476981"
             android:exported="true"/>
+
+        <meta-data
+            android:name="com.facebook.ClientToken"
+            android:value="17a004dc8dcdfdfef529cb0fda064fe3"/>
+
     </application>
 
 </manifest>

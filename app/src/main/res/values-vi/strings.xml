@@ -40,6 +40,8 @@
     <string name="signout">Đăng xuất</string>
     <string name="profile_4">Nhạc sĩ theo dõi</string>
     <string name="profile_btn_follow">Theo dõi</string>
+    <string name="artist">Nghệ sĩ</string>
+    <string name="song">Bài hát</string>
 
     <string name="play_music">Đang phát</string>
 

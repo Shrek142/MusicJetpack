@@ -49,8 +49,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.findNavController
 import com.example.musicappmvvmjetpack.Activities.theme.ColorButton
 import com.example.musicappmvvmjetpack.R
 import com.example.musicappmvvmjetpack.ViewModel.AuthViewModel
@@ -63,16 +61,20 @@ class SignUpFragment : Fragment() {
     ): View? {
         return ComposeView(requireContext()).apply {
             setContent {
-                val navController = findNavController()
-                SignUpScreen(navController = navController)
+                SignUpScreen(
+                    onNavigateToLogin = {
+                        parentFragmentManager.beginTransaction()
+                            .replace(R.id.fragment_container, LogInFragment())
+                            .commit()
+                    }
+                )
             }
         }
     }
 }
+
 @Composable
-fun SignUpScreen(
-    navController: NavController
-) {
+fun SignUpScreen(onNavigateToLogin: () -> Unit) {
     val viewModel: AuthViewModel = viewModel()
     val context = LocalContext.current
 
@@ -96,9 +98,7 @@ fun SignUpScreen(
             if (it) {
                 viewModel.loadCurrentUser()
                 Toast.makeText(context, registerOkMessage, Toast.LENGTH_SHORT).show()
-                navController.navigate(Screen.LOGIN.route) {
-                    popUpTo(Screen.SIGNUP.route) { inclusive = true }
-                }
+                onNavigateToLogin()
             } else {
                 Toast.makeText(context, errorMessage ?: registerFailMessage, Toast.LENGTH_SHORT).show()
             }
@@ -121,7 +121,7 @@ fun SignUpScreen(
         Spacer(modifier = Modifier.height(30.dp))
         Image(
             painterResource(id = R.drawable.ic_mic),
-            contentDescription = "",
+            contentDescription = null,
             colorFilter = ColorFilter.tint(ColorButton),
             modifier = Modifier.size(100.dp)
         )
@@ -129,7 +129,7 @@ fun SignUpScreen(
         OutlinedTextField(
             value = email,
             onValueChange = { email = it },
-            label = { Text(text = "Email", fontSize = 15.sp, color = ColorButton) },
+            label = { Text(text = stringResource(id = R.string.email), fontSize = 15.sp, color = ColorButton) },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Email,
@@ -145,10 +145,10 @@ fun SignUpScreen(
             trailingIcon = {
                 IconButton(onClick = { isShowed1 = !isShowed1 }) {
                     Image(
-                        painterResource(id = if (isShowed1){
-                            R.drawable.ic_hide} else R.drawable.ic_show),
-                        contentDescription = "",
-                        colorFilter = ColorFilter.tint(color = Color.Gray))
+                        painterResource(id = if (isShowed1) R.drawable.ic_hide else R.drawable.ic_show),
+                        contentDescription = null,
+                        colorFilter = ColorFilter.tint(color = Color.Gray)
+                    )
                 }
             },
             visualTransformation = if (isShowed1) VisualTransformation.None else PasswordVisualTransformation(),
@@ -166,10 +166,10 @@ fun SignUpScreen(
             trailingIcon = {
                 IconButton(onClick = { isShowed2 = !isShowed2 }) {
                     Image(
-                        painterResource(id = if (isShowed2){
-                            R.drawable.ic_hide} else R.drawable.ic_show),
-                        contentDescription = "",
-                        colorFilter = ColorFilter.tint(color = Color.Gray))
+                        painterResource(id = if (isShowed2) R.drawable.ic_hide else R.drawable.ic_show),
+                        contentDescription = null,
+                        colorFilter = ColorFilter.tint(color = Color.Gray)
+                    )
                 }
             },
             visualTransformation = if (isShowed2) VisualTransformation.None else PasswordVisualTransformation(),
@@ -204,25 +204,27 @@ fun SignUpScreen(
         Row {
             Text(text = stringResource(id = R.string.signup_2), fontSize = 15.sp, color = Color.Gray)
             Spacer(modifier = Modifier.width(5.dp))
-            Text(text = stringResource(id = R.string.login),
+            Text(
+                text = stringResource(id = R.string.login),
                 fontSize = 15.sp,
                 color = ColorButton,
-                modifier = Modifier.clickable {
-                    navController.navigate(Screen.LOGIN.route)
-                })
+                modifier = Modifier.clickable { onNavigateToLogin() }
+            )
         }
         Spacer(modifier = Modifier.height(40.dp))
         Button(
             onClick = {
-                if (password == confirm){
+                if (password == confirm) {
                     viewModel.register(
                         email = email,
                         password = password,
                         username = username,
                         phoneNumber = phoneNumber
                     )
-                }else{
-                    Toast.makeText(context, "Passwords do not match", Toast.LENGTH_SHORT).show()
+                } else {
+                    Toast.makeText(context, "pass và confirm khong khop",
+                        //stringResource(id = R.string.password_mismatch),
+                        Toast.LENGTH_SHORT).show()
                 }
             },
             shape = RoundedCornerShape(8.dp),
@@ -231,7 +233,9 @@ fun SignUpScreen(
                 pressedElevation = 8.dp,
                 disabledElevation = 0.dp
             ),
-            modifier = Modifier.padding(5.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(5.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = ColorButton,
                 contentColor = Color.White
@@ -239,9 +243,9 @@ fun SignUpScreen(
         ) {
             Text(
                 text = stringResource(id = R.string.signup),
-                modifier = Modifier.padding(6.dp)
+                modifier = Modifier.padding(6.dp),
+                fontSize = 16.sp
             )
         }
-
     }
 }

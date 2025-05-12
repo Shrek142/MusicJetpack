@@ -34,8 +34,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
-import androidx.navigation.NavController
-import androidx.navigation.findNavController
+import androidx.fragment.app.FragmentManager
 import com.example.musicappmvvmjetpack.Activities.theme.ColorButton
 import com.example.musicappmvvmjetpack.R
 import com.google.firebase.auth.FirebaseAuth
@@ -49,15 +48,24 @@ class SplashFragment : Fragment() {
     ): View? {
         return ComposeView(requireContext()).apply {
             setContent {
-                val navController = findNavController()
-                SplScreen(navController = navController)
+                SplScreen(
+                    onNavigate = { isLoggedIn ->
+                        val targetFragment = if (isLoggedIn) HomeFragment() else LogInFragment()
+
+                        parentFragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE) // XÓA HẾT backstack (xoá Splash)
+                        parentFragmentManager.beginTransaction()
+                            .replace(R.id.fragment_container, targetFragment)
+                            .commit()
+                    }
+
+                )
             }
         }
     }
 }
 
 @Composable
-fun SplScreen(navController: NavController, ) {
+fun SplScreen(onNavigate: (Boolean) -> Unit) {
     val isLoggedIn = FirebaseAuth.getInstance().currentUser != null
 
     Column(
@@ -89,7 +97,7 @@ fun SplScreen(navController: NavController, ) {
         )
         Spacer(modifier = Modifier.height(200.dp))
         Button(
-            onClick = { navController.navigate(if (isLoggedIn) Screen.HOMESCREEN.route else Screen.LOGIN.route) },
+            onClick = { onNavigate(isLoggedIn) },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(55.dp),
@@ -103,10 +111,8 @@ fun SplScreen(navController: NavController, ) {
         }
 
         Spacer(modifier = Modifier.height(20.dp))
-
     }
 }
-
 
 @Composable
 fun ColorfulCircles() {

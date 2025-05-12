@@ -45,12 +45,24 @@ class AuthRepository {
 
     suspend fun updateUserProfile(user: User): Result<Boolean> {
         return try {
-            db.collection("users").document(user.uid).set(user).await()
+            val updates = mapOf(
+                "username" to user.username,
+                "email" to user.email,
+                "phoneNumber" to user.phoneNumber,
+                "photoUrl" to user.photoUrl,
+                "language" to user.language
+            )
+
+            db.collection("users").document(user.uid)
+                .update(updates)
+                .await()
+
             Result.success(true)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
 
     fun updateUserEmail(newEmail: String, onResult: (Boolean) -> Unit) {
         val user = auth.currentUser

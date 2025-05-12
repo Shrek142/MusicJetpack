@@ -31,13 +31,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -45,14 +45,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.findNavController
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.ViewModelProvider
 import coil.compose.AsyncImage
 import com.example.musicappmvvmjetpack.Activities.theme.ColorBackgr
 import com.example.musicappmvvmjetpack.Model.Music
 import com.example.musicappmvvmjetpack.R
 import com.example.musicappmvvmjetpack.ViewModel.MusicViewModel
+import com.example.musicappmvvmjetpack.ViewModel.MusicViewModelFactory
 
 class FavoriteFragment : Fragment() {
 
@@ -62,22 +62,47 @@ class FavoriteFragment : Fragment() {
     ): View? {
         return ComposeView(requireContext()).apply {
             setContent {
-                val navController = findNavController()
-                val musicViewModel: MusicViewModel = viewModel()
-                // Truyền danh sách nhạc từ ViewModel hoặc một nguồn khác
-                FavoriteScreen(navController = navController, musicViewModel = musicViewModel, padding = Modifier)
+                val activity = LocalContext.current as FragmentActivity
+                val musicViewModel: MusicViewModel = ViewModelProvider(
+                    activity,
+                    MusicViewModelFactory(activity)
+                ).get(MusicViewModel::class.java)
+
+                FavoriteScreen(
+                    musicViewModel = musicViewModel,
+                    modifier = Modifier,
+                    onPlayMusic = { id ->
+                        val fragment = PlayMusicFragment().apply {
+                            arguments = Bundle().apply { putString("id", id) }
+                        }
+                        parentFragmentManager.beginTransaction()
+                            .replace(R.id.fragment_container, fragment)
+                            .addToBackStack(null)
+                            .commit()
+                    },
+                    onBack = {
+                        parentFragmentManager.popBackStack()
+                    },
+                    onSearch = {
+                        parentFragmentManager.beginTransaction()
+                            .replace(R.id.fragment_container, SearchFragment())
+                            .addToBackStack(null)
+                            .commit()
+                    }
+                )
             }
         }
     }
 }
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun FavoriteScreen(navController: NavController, musicViewModel: MusicViewModel, padding: Modifier) {
-    LaunchedEffect(Unit) {
-        musicViewModel.loadFavoritesFromFirestore()
-    }
+fun FavoriteScreen(musicViewModel: MusicViewModel,
+                   modifier: Modifier,
+                   onPlayMusic: (String) -> Unit,
+                   onBack: () -> Unit,
+                   onSearch: () -> Unit) {
 
-    Scaffold(topBar = { TopFavBar(navController) }) {
+    Scaffold(topBar = { TopFavBar(onBack, onSearch) }) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -111,9 +136,7 @@ fun FavoriteScreen(navController: NavController, musicViewModel: MusicViewModel,
                 } else {
                     FavoriteList(
                         musicViewModel = musicViewModel,
-                        onMusicClick = {
-                            navController.navigate("${Screen.PLAYMUSICSCREEN.route}/$it")
-                        }
+                        onMusicClick = onPlayMusic
                     )
                 }
             }
@@ -172,13 +195,13 @@ fun ItemFavorite(music: Music, onMusicClick: (id: String) -> Unit){
     }
 }
 @Composable
-fun TopFavBar(navController: NavController){
+fun TopFavBar(onBack: () -> Unit, onSearch: () -> Unit){
     Row(
         modifier = Modifier.padding(vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceAround
     ) {
-        IconButton(onClick = { navController.popBackStack() },
+        IconButton(onClick = { onBack() },
             modifier = Modifier.weight(1f)) {
             Icon(imageVector = Icons.Default.KeyboardArrowLeft, contentDescription = null)
         }
@@ -187,7 +210,7 @@ fun TopFavBar(navController: NavController){
             fontWeight = FontWeight.SemiBold,
             fontSize = 20.sp,
             modifier = Modifier.weight(3f))
-        IconButton(onClick = { navController.navigate(Screen.SEARCHSCREEN.route) },
+        IconButton(onClick = { onSearch() },
             modifier = Modifier.weight(1f)) {
             Icon(imageVector = Icons.Default.Search, contentDescription = null)
         }

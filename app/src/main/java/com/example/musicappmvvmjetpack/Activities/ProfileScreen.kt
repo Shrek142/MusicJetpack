@@ -69,42 +69,66 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.findNavController
 import coil.compose.rememberAsyncImagePainter
 import com.example.musicappmvvmjetpack.Activities.theme.ColorButton
 import com.example.musicappmvvmjetpack.LanguageManager
 import com.example.musicappmvvmjetpack.Model.User
 import com.example.musicappmvvmjetpack.R
 import com.example.musicappmvvmjetpack.ViewModel.AuthViewModel
+import com.example.musicappmvvmjetpack.ViewModel.MusicViewModel
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 class ProfileFragment : Fragment() {
 
+    private var composeView: ComposeView? = null
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return ComposeView(requireContext()).apply {
+    ): View {
+        composeView = ComposeView(requireContext()).apply {
             setContent {
-                val navController = findNavController()
-                ProfileScreen(navController = navController, padding = Modifier)
+                ProfileScreen(
+                    onBack = { parentFragmentManager.popBackStack() },
+                    onNavigateToLogin = {
+                        parentFragmentManager.beginTransaction()
+                            .replace(R.id.fragment_container, LogInFragment())
+                            .commit()
+                    }
+                )
             }
         }
+        return composeView!!
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        composeView?.disposeComposition()
+        composeView = null
     }
 }
+
 @Composable
-fun ProfileScreen(navController: NavController, padding: Modifier) {
+fun ProfileScreen(
+    onBack: () -> Unit,
+    onNavigateToLogin: () -> Unit
+) {
     val viewModel: AuthViewModel = viewModel()
     val user by viewModel.currentUser.collectAsState()
     var isRefreshing by remember { mutableStateOf(false) }
-
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing)
 
+    // Load lại user sau recreate
+    LaunchedEffect(Unit) {
+        viewModel.loadCurrentUser()
+    }
+
     Scaffold(
-        topBar = { TopProBar(navController) }
+        topBar = { TopProBar(onBack, user, viewModel) }
     ) { innerPadding ->
         SwipeRefresh(
             state = swipeRefreshState,
@@ -117,21 +141,25 @@ fun ProfileScreen(navController: NavController, padding: Modifier) {
             LaunchedEffect(user) {
                 isRefreshing = false
             }
-            MainContent(innerPadding, navController)
+            MainContent(innerPadding, viewModel, user, onNavigateToLogin)
         }
     }
 }
 
 @Composable
-fun MainContent(innerPadding: PaddingValues, navController: NavController) {
-    val viewModel: AuthViewModel = viewModel()
-    val user by viewModel.currentUser.collectAsState()
-
+fun MainContent(
+    innerPadding: PaddingValues,
+    viewModel: AuthViewModel,
+    user: User?,
+    onNavigateToLogin: () -> Unit
+) {
     var openDialog by remember { mutableStateOf(false) }
     if (openDialog) {
         UserDialog(
             onDismissRequest = { openDialog = false },
-            onConfirmation = { openDialog = false }
+            onConfirmation = { openDialog = false },
+            viewModel = viewModel,
+            user = user
         )
     }
 
@@ -167,7 +195,9 @@ fun MainContent(innerPadding: PaddingValues, navController: NavController) {
                 ) {
                     val (text, img) = createRefs()
                     Text(
-                        text = it.username, fontSize = 40.sp, fontWeight = FontWeight.SemiBold,
+                        text = it.username,
+                        fontSize = 40.sp,
+                        fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.constrainAs(text) {
                             centerHorizontallyTo(parent)
                             centerVerticallyTo(parent)
@@ -175,7 +205,7 @@ fun MainContent(innerPadding: PaddingValues, navController: NavController) {
                     )
                     IconButton(
                         onClick = { openDialog = true },
-                        modifier = Modifier.constrainAs(img){
+                        modifier = Modifier.constrainAs(img) {
                             start.linkTo(text.end, margin = 5.dp)
                         }
                     ) {
@@ -217,9 +247,7 @@ fun MainContent(innerPadding: PaddingValues, navController: NavController) {
         Button(
             onClick = {
                 viewModel.logout()
-                navController.navigate(Screen.LOGIN.route) {
-                    popUpTo(Screen.HOMESCREEN.route) { inclusive = true }
-                }
+                onNavigateToLogin()
             },
             modifier = Modifier.fillMaxWidth(),
             colors = ButtonDefaults.buttonColors(
@@ -227,7 +255,7 @@ fun MainContent(innerPadding: PaddingValues, navController: NavController) {
                 contentColor = Color.White
             )
         ) {
-            Text(stringResource(id = R.string.signout))
+            Text(stringResource(id = R.string.signout), fontSize = 16.sp)
         }
         Spacer(modifier = Modifier.height(10.dp))
         Text(text = stringResource(id = R.string.profile_4), fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
@@ -235,25 +263,48 @@ fun MainContent(innerPadding: PaddingValues, navController: NavController) {
         LazyColumnSinger()
     }
 }
+
+@Composable
+fun TopProBar(
+    onBack: () -> Unit,
+    user: User?,
+    viewModel: AuthViewModel
+) {
+    val context = LocalContext.current
+    val activity = context as? Activity
+    Row(
+        modifier = Modifier.padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceAround
+    ) {
+        IconButton(onClick = { onBack() }, modifier = Modifier.weight(1f)) {
+            Icon(imageVector = Icons.Default.KeyboardArrowLeft, contentDescription = null)
+        }
+        Text(
+            text = stringResource(id = R.string.profile),
+            textAlign = TextAlign.Center,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 20.sp,
+            modifier = Modifier.weight(3f)
+        )
+        LanguageSelectionButtons(user, viewModel, context, activity)
+    }
+}
+
 @Composable
 fun LanguageSelectionButtons(
     user: User?,
     viewModel: AuthViewModel,
     context: Context,
-    activity: Activity?,
-    modifier: Modifier
+    activity: Activity?
 ) {
     val updateResult by viewModel.updateResult.collectAsState()
     val prefs = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
     var selectedLanguage by rememberSaveable { mutableStateOf(prefs.getString("lang", "vi") ?: "vi") }
     var pendingLanguage by rememberSaveable { mutableStateOf<String?>(null) }
-    var shouldRecreate by rememberSaveable { mutableStateOf(false) }
     var showDropdown by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .padding(vertical = 5.dp)
-    ) {
+    Column(modifier = Modifier.padding(vertical = 5.dp)) {
         Box {
             Button(
                 onClick = { showDropdown = true },
@@ -265,8 +316,8 @@ fun LanguageSelectionButtons(
                 Row {
                     Image(
                         painter = rememberAsyncImagePainter(
-                            if (selectedLanguage == "vi") R.drawable.viet
-                                else R.drawable.anh),
+                            if (selectedLanguage == "vi") R.drawable.viet else R.drawable.anh
+                        ),
                         contentDescription = null,
                         modifier = Modifier
                             .clip(CircleShape)
@@ -274,16 +325,13 @@ fun LanguageSelectionButtons(
                         contentScale = ContentScale.Crop
                     )
                     Spacer(modifier = Modifier.width(3.dp))
-                    Text(
-                        text = if (selectedLanguage == "vi") "VIE" else "ENG",
-                        fontSize = 14.sp
-                    )
+                    Text(text = if (selectedLanguage == "vi") "VIE" else "ENG", fontSize = 14.sp)
                 }
             }
 
             DropdownMenu(
                 expanded = showDropdown,
-                onDismissRequest = { showDropdown = false },
+                onDismissRequest = { showDropdown = false }
             ) {
                 DropdownMenuItem(
                     text = { Text("Tiếng Việt") },
@@ -292,8 +340,8 @@ fun LanguageSelectionButtons(
                             selectedLanguage = "vi"
                             pendingLanguage = "vi"
                             val updatedUser = user?.copy(language = "vi")
-                            if (updatedUser != null) {
-                                viewModel.updateUser(updatedUser)
+                            updatedUser?.let {
+                                viewModel.updateUser(it)
                                 prefs.edit().putString("lang", "vi").commit()
                             }
                         }
@@ -307,8 +355,8 @@ fun LanguageSelectionButtons(
                             selectedLanguage = "en"
                             pendingLanguage = "en"
                             val updatedUser = user?.copy(language = "en")
-                            if (updatedUser != null) {
-                                viewModel.updateUser(updatedUser)
+                            updatedUser?.let {
+                                viewModel.updateUser(it)
                                 prefs.edit().putString("lang", "en").commit()
                             }
                         }
@@ -319,65 +367,34 @@ fun LanguageSelectionButtons(
         }
     }
 
-    LaunchedEffect(updateResult, shouldRecreate, pendingLanguage) {
-        if (updateResult == true && !shouldRecreate && pendingLanguage != null) {
+    LaunchedEffect(updateResult, pendingLanguage) {
+        if (updateResult == true && pendingLanguage != null) {
             val languageToApply = pendingLanguage!!
+            prefs.edit().putString("lang", languageToApply).commit()
+            LanguageManager.setLocale(context, languageToApply)
+
             activity?.let {
-                val updatedContext = LanguageManager.setLocale(it, languageToApply)
+                val fm = (it as FragmentActivity).supportFragmentManager
+                fm.fragments.forEach { fragment ->
+                    fm.beginTransaction().remove(fragment).commitNowAllowingStateLoss()
+                }
+
+                val musicViewModel: MusicViewModel = ViewModelProvider(it)[MusicViewModel::class.java]
+                musicViewModel.stopMusicCompletely()
+
                 it.recreate()
             }
-            shouldRecreate = true
-            viewModel.resetAuthResult()
         }
-    }
-
-    LaunchedEffect(Unit) {
-        if (shouldRecreate) {
-            shouldRecreate = false
-            pendingLanguage = null
-            val currentLang = prefs.getString("lang", "vi") ?: "vi"
-            if (currentLang != selectedLanguage) {
-                selectedLanguage = currentLang
-            }
-        }
-    }
-}
-
-@Composable
-fun TopProBar(navController: NavController) {
-    val viewModel: AuthViewModel = viewModel()
-    val user by viewModel.currentUser.collectAsState()
-    val context = LocalContext.current
-    val activity = context as? Activity
-    Row(
-        modifier = Modifier.padding(vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceAround
-    ) {
-        IconButton(
-            onClick = { navController.popBackStack() },
-            modifier = Modifier.weight(1f)
-        ) {
-            Icon(imageVector = Icons.Default.KeyboardArrowLeft, contentDescription = null)
-        }
-        Text(
-            text = stringResource(id = R.string.profile),
-            textAlign = TextAlign.Center,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 20.sp,
-            modifier = Modifier.weight(3f)
-        )
-        LanguageSelectionButtons(user, viewModel, context, activity, modifier = Modifier.weight(1f))
     }
 }
 
 @Composable
 fun UserDialog(
     onDismissRequest: () -> Unit,
-    onConfirmation: () -> Unit
+    onConfirmation: () -> Unit,
+    viewModel: AuthViewModel,
+    user: User?
 ) {
-    val viewModel: AuthViewModel = viewModel()
-    val user by viewModel.currentUser.collectAsState()
     val updateResult by viewModel.updateResult.collectAsState()
     val context = LocalContext.current
 
@@ -444,7 +461,7 @@ fun UserDialog(
                     label = { Text(text = stringResource(id = R.string.email), fontSize = 15.sp, color = ColorButton) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Text,
+                        keyboardType = KeyboardType.Email,
                         imeAction = ImeAction.Next
                     )
                 )
@@ -455,8 +472,8 @@ fun UserDialog(
                     label = { Text(text = stringResource(id = R.string.phone), fontSize = 15.sp, color = ColorButton) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Next
+                        keyboardType = KeyboardType.Phone,
+                        imeAction = ImeAction.Done
                     )
                 )
                 Spacer(modifier = Modifier.height(20.dp))
@@ -493,11 +510,12 @@ fun UserDialog(
         }
     }
 }
+
 @Composable
 fun LazyColumnSinger() {
     LazyColumn(modifier = Modifier.fillMaxWidth()) {
         items(5) {
-            ItemSinger(singer = "aa", song = "ssss")
+            ItemSinger(singer = stringResource(id = R.string.artist), song = stringResource(id =R.string.song))
         }
     }
 }
@@ -513,7 +531,7 @@ fun ItemSinger(singer: String, song: String) {
     ) {
         Image(
             painter = painterResource(id = R.drawable.img_1),
-            contentDescription = "",
+            contentDescription = null,
             modifier = Modifier
                 .weight(1.5f)
                 .size(70.dp)
@@ -534,7 +552,7 @@ fun ItemSinger(singer: String, song: String) {
             ),
             shape = RoundedCornerShape(12.dp)
         ) {
-            Text(text = stringResource(id = R.string.profile_btn_follow))
+            Text(text = stringResource(id = R.string.profile_btn_follow), fontSize = 14.sp)
         }
     }
 }

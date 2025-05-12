@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -48,9 +49,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.fragment.findNavController
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import com.example.musicappmvvmjetpack.Activities.theme.ColorButton
@@ -58,6 +59,7 @@ import com.example.musicappmvvmjetpack.Model.Music
 import com.example.musicappmvvmjetpack.R
 import com.example.musicappmvvmjetpack.ViewModel.AuthViewModel
 import com.example.musicappmvvmjetpack.ViewModel.MusicViewModel
+import com.example.musicappmvvmjetpack.ViewModel.MusicViewModelFactory
 import kotlinx.coroutines.delay
 
 class HomeFragment : Fragment() {
@@ -68,16 +70,40 @@ class HomeFragment : Fragment() {
     ): View? {
         return ComposeView(requireContext()).apply {
             setContent {
-                val navController = findNavController()
-                val musicViewModel: MusicViewModel = viewModel()
-                // Truyền danh sách nhạc từ ViewModel hoặc một nguồn khác
-                HomeScreen(navController = navController, musicViewModel = musicViewModel, padding = Modifier)
+                val activity = LocalContext.current as FragmentActivity
+                val musicViewModel: MusicViewModel = ViewModelProvider(
+                    activity,
+                    MusicViewModelFactory(activity)
+                ).get(MusicViewModel::class.java)
+
+                HomeScreen(
+                    musicViewModel = musicViewModel,
+                    modifier = Modifier,
+                    onPlayMusic = { id ->
+                        val fragment = PlayMusicFragment().apply {
+                            arguments = Bundle().apply { putString("id", id) }
+                        }
+                        parentFragmentManager.beginTransaction()
+                            .replace(R.id.fragment_container, fragment)
+                            .addToBackStack(null)
+                            .commit()
+                    },
+                    onAlbum = {
+                        parentFragmentManager.beginTransaction()
+                            .replace(R.id.fragment_container, AlbumFragment())
+                            .addToBackStack(null)
+                            .commit()
+                    }
+                )
             }
         }
     }
 }
 @Composable
-fun HomeScreen(navController: NavController, musicViewModel: MusicViewModel, padding: Modifier){
+fun HomeScreen(musicViewModel: MusicViewModel,
+               modifier: Modifier,
+               onPlayMusic: (String) -> Unit,
+               onAlbum: () -> Unit){
     val musicState = musicViewModel.musics.observeAsState(initial = emptyList())
     val musics = musicState.value
 
@@ -108,14 +134,12 @@ fun HomeScreen(navController: NavController, musicViewModel: MusicViewModel, pad
                 Text(text = stringResource(id = R.string.home_3),
                     fontSize = 15.sp,
                     modifier = Modifier.clickable {
-                        navController.navigate(Screen.ALBUMSCREEN.route)
+                        onAlbum()
                     })
             }
         }
         Spacer(modifier = Modifier.height(20.dp))
-        LazyMusicGrid(musics, onMusicClick = {
-            navController.navigate("${Screen.PLAYMUSICSCREEN.route}/${it}")
-        })
+        LazyMusicGrid(musics, onMusicClick = onPlayMusic)
     }
 
 }
@@ -188,11 +212,11 @@ fun TopHomeBar(){
                 modifier = Modifier.weight(2f)
             ) {
                 Text(text = stringResource(id = R.string.home_1), fontSize = 15.sp)
-                Text(text = it.username ?: "User", fontSize = 30.sp, fontWeight = FontWeight.SemiBold)
+                Text(text = it.username, fontSize = 30.sp, fontWeight = FontWeight.SemiBold)
             }
             //CircleAvatar()
             Image(
-                painter = rememberAsyncImagePainter(user?.photoUrl ?: R.drawable.img_bachduong),
+                painter = rememberAsyncImagePainter(it.photoUrl.ifEmpty { R.drawable.img_bachduong }),
                 contentDescription = null,
                 modifier = Modifier
                     .clip(CircleShape)
@@ -226,7 +250,8 @@ fun AutoChangingBanner() {
         modifier = Modifier
             .fillMaxWidth()
             .height(200.dp)
-            .clip(RoundedCornerShape(15.dp)),
+            .clip(RoundedCornerShape(15.dp))
+            .border(width = 1.dp, color = ColorButton),
         contentScale = ContentScale.Crop
     )
 }

@@ -28,6 +28,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -35,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -42,10 +44,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.fragment.app.Fragment
-import androidx.navigation.NavController
-import androidx.navigation.findNavController
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.ViewModelProvider
 import com.example.musicappmvvmjetpack.Model.Music
 import com.example.musicappmvvmjetpack.R
+import com.example.musicappmvvmjetpack.ViewModel.MusicViewModel
+import com.example.musicappmvvmjetpack.ViewModel.MusicViewModelFactory
 
 class SearchFragment : Fragment() {
 
@@ -55,15 +59,34 @@ class SearchFragment : Fragment() {
     ): View? {
         return ComposeView(requireContext()).apply {
             setContent {
-                val navController = findNavController()
-                // Truyền danh sách nhạc từ ViewModel hoặc một nguồn khác
-                SearchScreen(musicList = Music.getMusic(), navController = navController)
+                val activity = LocalContext.current as FragmentActivity
+                val musicViewModel: MusicViewModel = ViewModelProvider(
+                    activity,
+                    MusicViewModelFactory(activity)
+                ).get(MusicViewModel::class.java)
+
+                SearchScreen(
+                    musicViewModel = musicViewModel,
+                    onPlayMusic = { musicId ->
+                        val bundle = Bundle().apply { putString("musicId", musicId) }
+                        val fragment = PlayMusicFragment().apply { arguments = bundle }
+                        parentFragmentManager.beginTransaction()
+                            .replace(R.id.fragment_container, fragment)
+                            .addToBackStack(null)
+                            .commit()
+                    }
+                )
             }
         }
     }
 }
+
 @Composable
-fun SearchScreen(musicList: List<Music>, navController: NavController) {
+fun SearchScreen(
+    musicViewModel: MusicViewModel,
+    onPlayMusic: (String) -> Unit
+) {
+    val musicList by musicViewModel.musics.observeAsState(emptyList())
     var searchQuery by remember { mutableStateOf("") }
     val filteredMusic = musicList.filter {
         it.title.contains(searchQuery, ignoreCase = true) ||
@@ -72,47 +95,47 @@ fun SearchScreen(musicList: List<Music>, navController: NavController) {
 
     Column(modifier = Modifier.padding(horizontal = 30.dp)) {
         Spacer(modifier = Modifier.height(25.dp))
-
         OutlinedTextField(
             value = searchQuery,
             onValueChange = { searchQuery = it },
-            placeholder = { Text(text = stringResource(id = R.string.search))},
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "")},
+            placeholder = { Text(text = stringResource(id = R.string.search)) },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
             shape = RoundedCornerShape(30.dp),
-            modifier = Modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Text,
                 imeAction = ImeAction.Search
-            ),
+            )
         )
-
         Spacer(modifier = Modifier.height(20.dp))
-
         if (filteredMusic.isNotEmpty()) {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(15.dp),
-                modifier = Modifier.padding(4.dp),
+                modifier = Modifier.padding(4.dp)
             ) {
                 items(filteredMusic) { music ->
-                    ItemSearch(music, onMusicClick = {navController.navigate("${Screen.PLAYMUSICSCREEN.route}/${it}")})
+                    ItemSearch(music, onMusicClick = onPlayMusic)
                 }
             }
         } else {
-            Text(text = stringResource(id = R.string.search_fail), style = MaterialTheme.typography.bodyMedium)
+            Text(
+                text = stringResource(id = R.string.search_fail),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.align(Alignment.CenterHorizontally)
+            )
         }
     }
 }
 
 @Composable
-fun ItemSearch(music: Music, onMusicClick: (id: String) -> Unit){
+fun ItemSearch(
+    music: Music,
+    onMusicClick: (String) -> Unit
+) {
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(1.dp),
-        modifier = Modifier
-            .clickable {
-                onMusicClick(music.id.toString())
-            }
+        modifier = Modifier.clickable { onMusicClick(music.id.toString()) }
     ) {
         Row(
             modifier = Modifier
@@ -121,14 +144,15 @@ fun ItemSearch(music: Music, onMusicClick: (id: String) -> Unit){
             verticalAlignment = Alignment.CenterVertically
         ) {
             Spacer(modifier = Modifier.height(20.dp))
-            Column(
-                modifier = Modifier.weight(2f)
-            ) {
+            Column(modifier = Modifier.weight(2f)) {
                 Text(text = music.title, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
-                Text(text = music.singer, fontSize = 15.sp)
+                Text(text = music.singer, fontSize = 15.sp, color = Color.Gray)
             }
-            Icon(imageVector = Icons.Outlined.KeyboardArrowRight, contentDescription = "",
-                modifier = Modifier.size(30.dp))
+            Icon(
+                imageVector = Icons.Outlined.KeyboardArrowRight,
+                contentDescription = null,
+                modifier = Modifier.size(30.dp)
+            )
             Spacer(modifier = Modifier.height(20.dp))
         }
     }

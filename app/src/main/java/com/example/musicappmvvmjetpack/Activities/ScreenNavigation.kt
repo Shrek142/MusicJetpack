@@ -1,6 +1,7 @@
 package com.example.musicappmvvmjetpack.Activities
 
-
+import android.annotation.SuppressLint
+import android.os.Bundle
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -24,25 +26,30 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentActivity
+import androidx.fragment.app.FragmentContainerView
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.commit
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import coil.compose.AsyncImage
 import com.example.musicappmvvmjetpack.Activities.theme.ColorButton
-import com.example.musicappmvvmjetpack.Model.Music
 import com.example.musicappmvvmjetpack.R
 import com.example.musicappmvvmjetpack.ViewModel.MusicViewModel
 import com.example.musicappmvvmjetpack.ViewModel.MusicViewModelFactory
@@ -50,7 +57,7 @@ import com.example.musicappmvvmjetpack.ViewModel.MusicViewModelFactory
 enum class Screen(val route: String) {
     HOMESCREEN("home"),
     ALBUMSCREEN("album"),
-    PLAYMUSICSCREEN("play music"),
+    PLAYMUSICSCREEN("play_music"),
     SEARCHSCREEN("search"),
     FAVORITESCREEN("favorite"),
     SPLSCREEN("splash"),
@@ -58,195 +65,257 @@ enum class Screen(val route: String) {
     PROFILE("profile"),
     SIGNUP("signup"),
 }
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @Composable
-fun ScreenNavigation(){
+fun MainScreen() {
+    val context = LocalContext.current
+    val musicViewModel: MusicViewModel = viewModel(factory = MusicViewModelFactory(context))
+    val fragmentManager = (context as FragmentActivity).supportFragmentManager
 
-    val navController = rememberNavController()
-    val musicViewModel: MusicViewModel = viewModel(factory = MusicViewModelFactory(LocalContext.current))
+    var currentScreen by rememberSaveable { mutableStateOf(Screen.SPLSCREEN) }
 
-    NavHost(navController = navController, startDestination = Screen.SPLSCREEN.route){
+    LaunchedEffect(Unit) {
+        musicViewModel.loadFavoritesFromFirestore()
+    }
 
-        composable(Screen.SPLSCREEN.route) {
-            SplScreen(navController)
-            //FragmentContainer(fragmentClass = SplashFragment::class.java, navController)
-        }
-        composable(Screen.HOMESCREEN.route){
-            Scaffold(
-                bottomBar = {
-                    Column {
-                        NowMusicBar(musicViewModel, navController)
-                        BottomBar(navController, Screen.HOMESCREEN)
-                    }
-                }
-            ) {innerPadding ->
-                HomeScreen(navController, musicViewModel, Modifier.padding(innerPadding))
-            }
-        }
-        composable(Screen.ALBUMSCREEN.route){
-            Scaffold(
-                bottomBar = {
-                    Column {
-                        NowMusicBar(musicViewModel, navController)
-                        BottomBar(navController, Screen.ALBUMSCREEN)
-                    }
-                }
-            ) {innerPadding ->
-                AlbumScreen( navController, musicViewModel, Modifier.padding(innerPadding))
-            }
-        }
-        composable(Screen.FAVORITESCREEN.route) {
-            Scaffold(
-                bottomBar = {
-                    Column {
-                        NowMusicBar(musicViewModel, navController)
-                        BottomBar(navController, Screen.FAVORITESCREEN)
-                    }
-                }
-            ) {innerPadding ->
-                FavoriteScreen(navController, musicViewModel, Modifier.padding(innerPadding))
-            }
-        }
-        composable(Screen.PROFILE.route) {
-            Scaffold(
-                bottomBar = {
-                    Column {
-                        NowMusicBar(musicViewModel, navController)
-                        BottomBar(navController, Screen.PROFILE)
-                    }
-                }
-            ) {innerPadding ->
-                ProfileScreen(navController, Modifier.padding(innerPadding))
-            }
-        }
-        composable(
-            "${Screen.PLAYMUSICSCREEN.route}/{id}",
-            arguments = listOf(navArgument("id") {type = NavType.StringType}),
-        ){backStackEntry ->
-            backStackEntry.arguments?.getString("id")?.let { id ->
-                PlayMusicScreen(navController,musicViewModel, id )
-            }
-        }
-        composable(Screen.SEARCHSCREEN.route) {
-            SearchScreen(musicList = Music.getMusic(), navController)
-        }
-        composable(Screen.LOGIN.route) {
-            LoginScreen(navController)
-        }
-        composable(Screen.SIGNUP.route) {
-            SignUpScreen(navController)
+    // Hàm cập nhật currentScreen chính xác ngay lập tức
+    fun updateCurrentScreen() {
+        val currentFragment = fragmentManager.findFragmentById(R.id.fragment_container)
+        currentScreen = when (currentFragment) {
+            is HomeFragment -> Screen.HOMESCREEN
+            is AlbumFragment -> Screen.ALBUMSCREEN
+            is FavoriteFragment -> Screen.FAVORITESCREEN
+            is ProfileFragment -> Screen.PROFILE
+            is PlayMusicFragment -> Screen.PLAYMUSICSCREEN
+            is SearchFragment -> Screen.SEARCHSCREEN
+            is SplashFragment -> Screen.SPLSCREEN
+            is LogInFragment -> Screen.LOGIN
+            is SignUpFragment -> Screen.SIGNUP
+            else -> Screen.HOMESCREEN
         }
     }
-}
-@Composable
-fun BottomBar(navController: NavController, currentScreen: Screen){
 
+    // Lắng nghe backstack (để cover popBackStack)
+    DisposableEffect(fragmentManager) {
+        val callback = object : FragmentManager.FragmentLifecycleCallbacks() {
+            override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
+                currentScreen = when (f) {
+                    is HomeFragment -> Screen.HOMESCREEN
+                    is AlbumFragment -> Screen.ALBUMSCREEN
+                    is FavoriteFragment -> Screen.FAVORITESCREEN
+                    is ProfileFragment -> Screen.PROFILE
+                    is PlayMusicFragment -> Screen.PLAYMUSICSCREEN
+                    is SearchFragment -> Screen.SEARCHSCREEN
+                    is SplashFragment -> Screen.SPLSCREEN
+                    is LogInFragment -> Screen.LOGIN
+                    is SignUpFragment -> Screen.SIGNUP
+                    else -> Screen.HOMESCREEN
+                }
+            }
+        }
+        fragmentManager.registerFragmentLifecycleCallbacks(callback, true)
+        onDispose {
+            fragmentManager.unregisterFragmentLifecycleCallbacks(callback)
+        }
+    }
+
+    // Load splash lần đầu
+    LaunchedEffect(Unit) {
+        if (fragmentManager.findFragmentById(R.id.fragment_container) == null) {
+            fragmentManager.commit {
+                replace(R.id.fragment_container, SplashFragment())
+            }
+            updateCurrentScreen() // Cập nhật ngay
+        }
+    }
+
+    // LOG realtime currentScreen
+    LaunchedEffect(currentScreen) {
+        println("Current screen = $currentScreen")
+    }
+
+    fun navigateTo(screen: Screen) {
+        val fragment = when (screen) {
+            Screen.HOMESCREEN -> HomeFragment()
+            Screen.ALBUMSCREEN -> AlbumFragment()
+            Screen.FAVORITESCREEN -> FavoriteFragment()
+            Screen.PROFILE -> ProfileFragment()
+            Screen.SEARCHSCREEN -> SearchFragment()
+            Screen.PLAYMUSICSCREEN -> PlayMusicFragment()
+            Screen.SPLSCREEN -> SplashFragment()
+            Screen.LOGIN -> LogInFragment()
+            Screen.SIGNUP -> SignUpFragment()
+        }
+
+        fragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, fragment)
+            .apply {
+                if (screen !in listOf(
+                        Screen.HOMESCREEN,
+                    )
+                ) addToBackStack(null)
+            }
+            .commit()
+
+        currentScreen = screen // Cập nhật NGAY SAU replace
+    }
+
+    Scaffold(
+        bottomBar = {
+            Column {
+                val currentMusic by musicViewModel.currentMusic.observeAsState()
+                if (currentMusic != null && currentScreen !in listOf(
+                        Screen.SPLSCREEN,
+                        Screen.LOGIN,
+                        Screen.SIGNUP,
+                        Screen.PLAYMUSICSCREEN
+                    )
+                ) {
+                    NowMusicBar(musicViewModel) { id ->
+                        val fragment = PlayMusicFragment().apply {
+                            arguments = Bundle().apply { putString("id", id) }
+                        }
+                        fragmentManager.beginTransaction()
+                            .replace(R.id.fragment_container, fragment)
+                            .addToBackStack(null)
+                            .commit()
+
+                        currentScreen = Screen.PLAYMUSICSCREEN
+                    }
+                }
+
+                // BottomBar hiện 4 màn
+                if (currentScreen in listOf(
+                        Screen.HOMESCREEN,
+                        Screen.ALBUMSCREEN,
+                        Screen.FAVORITESCREEN,
+                        Screen.PROFILE
+                    )
+                ) {
+                    BottomBar(currentScreen = currentScreen) { screen ->
+                        navigateTo(screen)
+                    }
+                }
+            }
+        },
+        content = { innerPadding ->
+            AndroidView(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                factory = { context ->
+                    FragmentContainerView(context).apply {
+                        id = R.id.fragment_container
+                    }
+                }
+            )
+        }
+    )
+}
+
+@Composable
+fun BottomBar(
+    currentScreen: Screen, // thêm currentScreen
+    onNavigate: (Screen) -> Unit
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(Color.White),
         horizontalArrangement = Arrangement.SpaceAround,
     ) {
-        Card(
-            modifier = Modifier
-                .clickable {
-                    navController.navigate(Screen.HOMESCREEN.route) {
-                        popUpTo(Screen.HOMESCREEN.route) { inclusive = true }
-                    }
-                },
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White
-            ),
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(5.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+        BottomBarItem(
+            screen = Screen.HOMESCREEN,
+            labelResId = R.string.home,
+            icon = { tintColor ->
                 Icon(
                     Icons.Filled.Home,
                     contentDescription = "Home",
-                    tint = if (currentScreen == Screen.HOMESCREEN) ColorButton else Color.Gray
+                    tint = tintColor
                 )
-                Text("Home", color = if (currentScreen == Screen.HOMESCREEN) ColorButton else Color.Gray)
-            }
-        }
+            },
+            currentScreen = currentScreen,
+            onNavigate = onNavigate
+        )
 
-        Card(
-            modifier = Modifier
-                .clickable {
-                    navController.navigate(Screen.ALBUMSCREEN.route) {
-                        popUpTo(Screen.ALBUMSCREEN.route) { inclusive = true }
-                    }
-                },
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White
-            ),
-        ) {
-            Column(
-                modifier = Modifier.padding(5.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+        BottomBarItem(
+            screen = Screen.ALBUMSCREEN,
+            labelResId = R.string.album,
+            icon = { tintColor ->
                 Image(
-                    painterResource(id = R.drawable.ic_album),
-                    contentDescription = "",
-                    colorFilter = ColorFilter.tint(if (currentScreen == Screen.ALBUMSCREEN) ColorButton else Color.Gray))
-                Text("Album", color = if (currentScreen == Screen.ALBUMSCREEN) ColorButton else Color.Gray)
-            }
-        }
+                    painter = painterResource(id = R.drawable.ic_album),
+                    contentDescription = "Album",
+                    colorFilter = ColorFilter.tint(tintColor),
+                    modifier = Modifier.size(24.dp)  // Thêm size cho đẹp
+                )
+            },
+            currentScreen = currentScreen,
+            onNavigate = onNavigate
+        )
 
-        Card(
-            modifier = Modifier
-                .clickable {
-                    navController.navigate(Screen.FAVORITESCREEN.route) {
-                        popUpTo(Screen.FAVORITESCREEN.route) { inclusive = true }
-                    }
-                },
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White
-            ),
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(5.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+        BottomBarItem(
+            screen = Screen.FAVORITESCREEN,
+            labelResId = R.string.favorite,
+            icon = { tintColor ->
                 Icon(
                     Icons.Filled.Favorite,
-                    contentDescription = "",
-                    tint = if (currentScreen == Screen.FAVORITESCREEN) ColorButton else Color.Gray
+                    contentDescription = "Favorite",
+                    tint = tintColor
                 )
-                Text("My Favorite", color = if (currentScreen == Screen.FAVORITESCREEN) ColorButton else Color.Gray)
-            }
-        }
+            },
+            currentScreen = currentScreen,
+            onNavigate = onNavigate
+        )
 
-        Card(
-            modifier = Modifier
-                .clickable {
-                    navController.navigate(Screen.PROFILE.route) {
-                        popUpTo(Screen.PROFILE.route) { inclusive = true }
-                    }
-                },
-            colors = CardDefaults.cardColors(
-                containerColor = Color.White
-            ),
-        ) {
-            Column(
-                modifier = Modifier
-                    .padding(5.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
+        BottomBarItem(
+            screen = Screen.PROFILE,
+            labelResId = R.string.profile,
+            icon = { tintColor ->
                 Icon(
                     Icons.Filled.Person,
                     contentDescription = "Profile",
-                    tint = if (currentScreen == Screen.PROFILE) ColorButton else Color.Gray
+                    tint = tintColor
                 )
-                Text("Profile", color = if (currentScreen == Screen.PROFILE) ColorButton else Color.Gray)
-            }
+            },
+            currentScreen = currentScreen,
+            onNavigate = onNavigate
+        )
+
+    }
+}
+
+@Composable
+fun BottomBarItem(
+    screen: Screen,
+    labelResId: Int,
+    icon: @Composable (Color) -> Unit,
+    currentScreen: Screen,
+    onNavigate: (Screen) -> Unit
+) {
+    val isSelected = screen == currentScreen
+    val tintColor = if (isSelected) ColorButton else Color.Gray
+
+    Card(
+        modifier = Modifier
+            .clickable { onNavigate(screen) },
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+    ) {
+        Column(
+            modifier = Modifier.padding(5.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            icon(tintColor)  // Truyền màu vào icon
+            Text(
+                text = stringResource(id = labelResId),
+                color = tintColor
+            )
         }
     }
 }
+
 @Composable
-fun NowMusicBar(musicViewModel: MusicViewModel, navController: NavController){
+fun NowMusicBar(musicViewModel: MusicViewModel, onNavigate: (String) -> Unit) {
     val currentMusic by musicViewModel.currentMusic.observeAsState()
     val icon = if (musicViewModel.isPlay) {
         R.drawable.ic_pause
@@ -261,52 +330,65 @@ fun NowMusicBar(musicViewModel: MusicViewModel, navController: NavController){
                 .size(200.dp, 70.dp)
                 .background(Color.Gray.copy(alpha = 0.8f))
                 .padding(5.dp)
-                .clickable {
-                    navController.navigate("${Screen.PLAYMUSICSCREEN.route}/${it.id}")
-                },
+                .clickable { onNavigate(it.id.toString()) },
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
                 model = it.posterUrl,
-                contentDescription = "",
+                contentDescription = "Music poster",
                 modifier = Modifier
                     .fillMaxHeight()
-                    .weight(2f))
+                    .weight(2f)
+            )
             Spacer(modifier = Modifier.width(5.dp))
             Column(modifier = Modifier.weight(4f)) {
                 Text(text = it.title)
                 Text(text = it.singer)
             }
-            IconButton(modifier = Modifier.weight(1f),
-                onClick = { musicViewModel.previousMusic() }) {
-                Image(painterResource(id = R.drawable.ic_previous), contentDescription = "",
-                    modifier = Modifier.size(150.dp))
+            IconButton(
+                modifier = Modifier.weight(1f),
+                onClick = { musicViewModel.previousMusic() }
+            ) {
+                Image(
+                    painterResource(id = R.drawable.ic_previous),
+                    contentDescription = "Previous",
+                    modifier = Modifier.size(30.dp)
+                )
             }
-            Spacer(modifier = Modifier.width(20.dp))
+            Spacer(modifier = Modifier.width(10.dp))
             IconButton(
                 modifier = Modifier.weight(1f),
                 onClick = {
-                if (musicViewModel.isPlay){
-                    musicViewModel.pauseMusic()
-                }else{
-                    musicViewModel.resumeMusic()
+                    if (musicViewModel.isPlay) {
+                        musicViewModel.pauseMusic()
+                    } else {
+                        musicViewModel.resumeMusic()
+                    }
                 }
-
-            }) {
+            ) {
                 Image(
                     painter = painterResource(id = icon),
-                    contentDescription = "",
+                    contentDescription = "Play/Pause",
                     colorFilter = ColorFilter.tint(ColorButton),
-                    modifier = Modifier.size(300.dp))
+                    modifier = Modifier.size(30.dp)
+                )
             }
-            Spacer(modifier = Modifier.width(20.dp))
-            IconButton(modifier = Modifier.weight(1f),
+            Spacer(modifier = Modifier.width(10.dp))
+            IconButton(
+                modifier = Modifier.weight(1f),
                 onClick = {
-                    if (musicViewModel.isRandom){musicViewModel.playNextRandom()}
-                    else{musicViewModel.nextMusic()}
-                }) {
-                Image(painterResource(id = R.drawable.ic_next), contentDescription = "",
-                    modifier = Modifier.size(150.dp))
+                    if (musicViewModel.isRandom) {
+                        musicViewModel.playNextRandom()
+                    } else {
+                        musicViewModel.nextMusic()
+                    }
+                }
+            ) {
+                Image(
+                    painterResource(id = R.drawable.ic_next),
+                    contentDescription = "Next",
+                    modifier = Modifier.size(30.dp)
+                )
             }
         }
     }

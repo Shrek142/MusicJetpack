@@ -184,5 +184,12 @@ class MusicViewModel(private val context: Context) : ViewModel() {
                 favoriteSongs.addAll(allSongs.filter { songIds.contains(it.id.toString()) })
             }
     }
-
+    fun stopMusicCompletely() {
+        mediaPlayer?.release()
+        mediaPlayer = null
+        isPlay = false
+        _currentMusic.value = null
+        currentMusicId = null
+        stopTimer()
+    }
 }
